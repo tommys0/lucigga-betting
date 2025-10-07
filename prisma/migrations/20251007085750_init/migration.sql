@@ -1,0 +1,34 @@
+-- CreateTable
+CREATE TABLE "Player" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "points" INTEGER NOT NULL DEFAULT 1000,
+    "gamesWon" INTEGER NOT NULL DEFAULT 0,
+    "gamesLost" INTEGER NOT NULL DEFAULT 0,
+    "totalBet" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "Game" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "actualTime" INTEGER NOT NULL,
+    "playedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
+CREATE TABLE "Bet" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "playerId" TEXT NOT NULL,
+    "gameId" TEXT NOT NULL,
+    "prediction" INTEGER NOT NULL,
+    "betAmount" INTEGER NOT NULL,
+    "winnings" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Bet_playerId_fkey" FOREIGN KEY ("playerId") REFERENCES "Player" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "Bet_gameId_fkey" FOREIGN KEY ("gameId") REFERENCES "Game" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Player_name_key" ON "Player"("name");
