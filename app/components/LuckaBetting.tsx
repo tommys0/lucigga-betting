@@ -216,6 +216,10 @@ export default function LuckaBetting() {
     setMyBet(null);
   };
 
+  /**
+   * Reveal game results and calculate points
+   * Can only be called after betting window closes (8:20 AM)
+   */
   const revealResults = async () => {
     if (actualTime === null) {
       alert("Please enter the actual time first");
@@ -785,6 +789,7 @@ export default function LuckaBetting() {
                     </div>
                   </div>
 
+                  {/* Betting window restriction - prevents revealing results while bets are still open */}
                   {bettingOpen && (
                     <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 text-center">
                       <p className="text-yellow-700 dark:text-yellow-400 text-sm flex items-center justify-center gap-2">
@@ -796,6 +801,7 @@ export default function LuckaBetting() {
                     </div>
                   )}
 
+                  {/* Reveal Results button - disabled during betting window and when no bets exist */}
                   <button
                     onClick={revealResults}
                     disabled={loading || bettingOpen || todaysBets.length === 0}
