@@ -3,6 +3,9 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import * as bcrypt from "bcryptjs";
 
+// Force Node.js runtime for bcryptjs and Prisma compatibility
+export const runtime = 'nodejs';
+
 export async function GET() {
   try {
     const session = await auth();

@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+// Force Node.js runtime for Prisma compatibility
+export const runtime = 'nodejs';
+
 function calculateWinnings(prediction: number, actualTime: number, betAmount: number): number {
   const difference = Math.abs(prediction - actualTime);
 
