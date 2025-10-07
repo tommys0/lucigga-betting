@@ -181,3 +181,65 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to save bet' }, { status: 500 });
   }
 }
+
+// DELETE: Remove a bet
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const playerName = searchParams.get('playerName');
+
+    if (!playerName) {
+      return NextResponse.json({ error: 'Player name is required' }, { status: 400 });
+    }
+
+    // Find player
+    const player = await prisma.player.findUnique({
+      where: { name: playerName },
+    });
+
+    if (!player) {
+      return NextResponse.json({ error: 'Player not found' }, { status: 404 });
+    }
+
+    // Get today's date range
+    const now = new Date();
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+
+    let searchStart: Date;
+    if (hours < 8 || (hours === 8 && minutes < 20)) {
+      searchStart = new Date(startOfToday);
+      searchStart.setDate(searchStart.getDate() - 1);
+      searchStart.setHours(18, 0, 0, 0);
+    } else {
+      searchStart = new Date(startOfToday);
+      searchStart.setHours(18, 0, 0, 0);
+    }
+
+    // Find and delete today's bet
+    const bet = await prisma.bet.findFirst({
+      where: {
+        playerId: player.id,
+        createdAt: {
+          gte: searchStart,
+        },
+      },
+    });
+
+    if (!bet) {
+      return NextResponse.json({ error: 'No bet found' }, { status: 404 });
+    }
+
+    await prisma.bet.delete({
+      where: { id: bet.id },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Delete bet error:', error);
+    return NextResponse.json({ error: 'Failed to delete bet' }, { status: 500 });
+  }
+}

@@ -212,8 +212,25 @@ export default function LuckaBetting() {
     }
   };
 
-  const removeBet = () => {
-    setMyBet(null);
+  const removeBet = async () => {
+    if (!myPlayer) return;
+
+    try {
+      const response = await fetch(`/api/bets?playerName=${encodeURIComponent(myPlayer.name)}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setMyBet(null);
+        setPrediction(0); // Reset prediction slider
+      } else {
+        alert("Failed to remove bet. Please try again.");
+      }
+    } catch (error) {
+      console.error("Failed to remove bet:", error);
+      alert("Failed to remove bet. Please try again.");
+    }
   };
 
   /**
