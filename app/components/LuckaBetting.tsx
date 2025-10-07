@@ -114,7 +114,7 @@ export default function LuckaBetting() {
       return;
     }
 
-    if (!bettingOpen && session?.user?.role !== "admin") {
+    if (!bettingOpen) {
       alert(
         "Betting is closed! You can only place bets between midnight and 8:20 AM.",
       );
@@ -429,7 +429,7 @@ export default function LuckaBetting() {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {!bettingOpen && session?.user?.role !== "admin" && (
+                  {!bettingOpen && (
                     <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-center">
                       <p className="text-red-700 dark:text-red-400 text-sm">
                         🔒 Betting is closed! Come back between midnight and 8:20 AM.
@@ -449,7 +449,7 @@ export default function LuckaBetting() {
                         value={prediction}
                         onChange={(e) => setPrediction(parseInt(e.target.value))}
                         className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                        disabled={!bettingOpen && session?.user?.role !== "admin"}
+                        disabled={!bettingOpen}
                       />
                       <div className="mt-4 text-center">
                         <p className="text-4xl font-bold text-blue-600 dark:text-blue-400">
@@ -474,7 +474,7 @@ export default function LuckaBetting() {
                         placeholder="Enter amount"
                         min="10"
                         max={myPlayer.points}
-                        disabled={!bettingOpen && session?.user?.role !== "admin"}
+                        disabled={!bettingOpen}
                       />
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">
                         / {myPlayer.points} pts
@@ -484,10 +484,7 @@ export default function LuckaBetting() {
 
                   <button
                     onClick={placeBet}
-                    disabled={
-                      (!bettingOpen && session?.user?.role !== "admin") ||
-                      betAmount > myPlayer.points
-                    }
+                    disabled={!bettingOpen || betAmount > myPlayer.points}
                     className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 text-white font-bold rounded-xl text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     <span className="text-2xl">🎲</span>

@@ -6,12 +6,14 @@ export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    const users = await prisma.user.findMany();
-    return NextResponse.json(users);
+    const players = await prisma.player.findMany({
+      orderBy: { points: 'desc' },
+    });
+    return NextResponse.json(players);
   } catch (error) {
     console.error(error);
     return NextResponse.json(
-      { error: "Failed to fetch users" },
+      { error: "Failed to fetch players" },
       { status: 500 },
     );
   }
