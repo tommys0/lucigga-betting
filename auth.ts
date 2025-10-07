@@ -65,7 +65,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       const isLoggedIn = !!auth;
 
       // Public routes
-      const publicRoutes = ['/login', '/players', '/api/players'];
+      const publicRoutes = ['/login', '/register', '/players', '/api/players', '/api/register'];
       const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
 
       // Admin routes
