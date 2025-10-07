@@ -4,88 +4,98 @@ import { prisma } from '@/lib/prisma';
 // Force Node.js runtime for Prisma compatibility
 export const runtime = 'nodejs';
 
-function calculateWinnings(prediction: number, actualTime: number, betAmount: number): number {
+function calculatePoints(prediction: number, actualTime: number): number {
   const difference = Math.abs(prediction - actualTime);
-
-  if (difference === 0) {
-    return betAmount * 10;
-  } else if (difference === 1) {
-    return betAmount * 5;
-  } else if (difference === 2) {
-    return betAmount * 3;
-  } else if (difference === 3) {
-    return betAmount * 2;
-  } else if (difference <= 5) {
-    return Math.floor(betAmount * 1.5);
-  }
-  return 0;
+  // Points = 10 - minutes off, minimum 0, maximum 10
+  return Math.max(0, 10 - difference);
 }
 
 export async function POST(request: Request) {
   try {
-    const { actualTime, bets } = await request.json();
+    const { actualTime } = await request.json();
 
-    // Create the game
-    const game = await prisma.game.create({
-      data: {
-        actualTime,
+    // Get today's date range
+    const now = new Date();
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+
+    let searchStart: Date;
+    if (hours < 8 || (hours === 8 && minutes < 20)) {
+      searchStart = new Date(startOfToday);
+      searchStart.setDate(searchStart.getDate() - 1);
+      searchStart.setHours(18, 0, 0, 0);
+    } else {
+      searchStart = new Date(startOfToday);
+      searchStart.setHours(18, 0, 0, 0);
+    }
+
+    // Find or create today's game
+    let game = await prisma.game.findFirst({
+      where: {
+        playedAt: {
+          gte: searchStart,
+        },
+      },
+    });
+
+    if (!game) {
+      game = await prisma.game.create({
+        data: {
+          actualTime,
+        },
+      });
+    } else {
+      // Update game with actual time
+      game = await prisma.game.update({
+        where: { id: game.id },
+        data: { actualTime },
+      });
+    }
+
+    // Find all bets for this game
+    const bets = await prisma.bet.findMany({
+      where: {
+        gameId: game.id,
+      },
+      include: {
+        player: true,
       },
     });
 
     // Process each bet
     const results = await Promise.all(
-      bets.map(async (bet: { playerName: string; prediction: number; betAmount: number }) => {
-        // Get or create player
-        let player = await prisma.player.findUnique({
-          where: { name: bet.playerName },
-        });
+      bets.map(async (bet) => {
+        // Calculate points earned (new system: 10 - minutes off)
+        const pointsEarned = calculatePoints(bet.prediction, actualTime);
+        const netChange = pointsEarned; // Always positive or zero
 
-        if (!player) {
-          player = await prisma.player.create({
-            data: { name: bet.playerName },
-          });
-        }
-
-        // Calculate winnings
-        const winnings = calculateWinnings(bet.prediction, actualTime, bet.betAmount);
-        const netChange = winnings > 0 ? winnings : -bet.betAmount;
-
-        // Check if player has enough points
-        if (player.points < bet.betAmount) {
-          return {
-            playerName: bet.playerName,
-            error: 'Insufficient points',
-            currentPoints: player.points,
-          };
-        }
-
-        // Create bet record
-        const betRecord = await prisma.bet.create({
+        // Update bet record with winnings
+        await prisma.bet.update({
+          where: { id: bet.id },
           data: {
-            playerId: player.id,
-            gameId: game.id,
-            prediction: bet.prediction,
-            betAmount: bet.betAmount,
-            winnings,
+            winnings: pointsEarned,
           },
         });
 
-        // Update player stats
+        // Update player stats - points can only increase
         const updatedPlayer = await prisma.player.update({
-          where: { id: player.id },
+          where: { id: bet.player.id },
           data: {
-            points: player.points + netChange,
-            gamesWon: winnings > 0 ? player.gamesWon + 1 : player.gamesWon,
-            gamesLost: winnings === 0 ? player.gamesLost + 1 : player.gamesLost,
-            totalBet: player.totalBet + bet.betAmount,
+            points: bet.player.points + pointsEarned,
+            gamesWon: pointsEarned > 0 ? bet.player.gamesWon + 1 : bet.player.gamesWon,
+            gamesLost: pointsEarned === 0 ? bet.player.gamesLost + 1 : bet.player.gamesLost,
+            totalBet: bet.player.totalBet + bet.betAmount,
           },
         });
 
         return {
-          playerName: bet.playerName,
+          playerName: bet.player.name,
           prediction: bet.prediction,
           betAmount: bet.betAmount,
-          winnings,
+          winnings: pointsEarned,
           netChange,
           newPoints: updatedPlayer.points,
           difference: Math.abs(bet.prediction - actualTime),
