@@ -4,6 +4,20 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
+import { useTheme } from '../components/ThemeProvider';
+
+interface DashboardData {
+  stats: {
+    totalUsers: number;
+    totalPlayers: number;
+    totalGames: number;
+    activePlayersToday: number;
+  };
+  todayGames: any[];
+  activePlayers: any[];
+  players: any[];
+  recentBets: any[];
+}
 
 interface User {
   id: string;
@@ -20,10 +34,13 @@ interface User {
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { theme, toggleTheme } = useTheme();
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'users'>('overview');
 
   const [newUser, setNewUser] = useState({
     username: '',
@@ -43,9 +60,22 @@ export default function AdminDashboard() {
     } else if (status === 'authenticated' && session?.user?.role !== 'admin') {
       router.push('/');
     } else if (status === 'authenticated') {
+      fetchDashboardData();
       fetchUsers();
     }
   }, [status, session, router]);
+
+  const fetchDashboardData = async () => {
+    try {
+      const response = await fetch('/api/admin/dashboard');
+      const data = await response.json();
+      setDashboardData(data);
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -54,8 +84,6 @@ export default function AdminDashboard() {
       setUsers(data);
     } catch (error) {
       console.error('Failed to fetch users:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -72,6 +100,7 @@ export default function AdminDashboard() {
         setNewUser({ username: '', password: '', role: 'user', playerName: '' });
         setShowCreateForm(false);
         fetchUsers();
+        fetchDashboardData();
       } else {
         const error = await response.json();
         alert(error.error || 'Failed to create user');
@@ -114,6 +143,7 @@ export default function AdminDashboard() {
 
       if (response.ok) {
         fetchUsers();
+        fetchDashboardData();
       } else {
         alert('Failed to delete user');
       }
@@ -122,171 +152,391 @@ export default function AdminDashboard() {
     }
   };
 
+  const formatTime = (minutes: number) => {
+    if (minutes === 0) return "On time";
+    if (minutes < 0) return `${Math.abs(minutes)} min early`;
+    return `${minutes} min late`;
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  };
+
   if (loading || status === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-800 to-purple-900 flex items-center justify-center">
-        <p className="text-white text-2xl">Loading...</p>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <p className="text-gray-900 dark:text-white text-2xl">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-800 to-purple-900 py-12 px-4">
-      <div className="max-w-6xl mx-auto">
-        <header className="flex justify-between items-center mb-12">
-          <div>
-            <h1 className="text-5xl font-bold text-white mb-2">🔐 Admin Dashboard</h1>
-            <p className="text-purple-200 text-xl">Manage users and permissions</p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <header className="mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                🔐 Admin Dashboard
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Monitor betting activity and manage users
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={toggleTheme}
+                className="w-10 h-10 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center justify-center transition-colors"
+              >
+                {theme === 'light' ? '🌙' : '☀️'}
+              </button>
+              <button
+                onClick={() => router.push('/')}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors"
+              >
+                ← Back
+              </button>
+              <button
+                onClick={() => signOut({ callbackUrl: '/login' })}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors"
+              >
+                Sign Out
+              </button>
+            </div>
           </div>
-          <div className="flex gap-4">
+
+          {/* Tabs */}
+          <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
             <button
-              onClick={() => router.push('/')}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition"
+              onClick={() => setActiveTab('overview')}
+              className={`px-6 py-3 font-semibold transition-colors ${
+                activeTab === 'overview'
+                  ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
             >
-              ← Back to Betting
+              📊 Overview
             </button>
             <button
-              onClick={() => signOut({ callbackUrl: '/login' })}
-              className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition"
+              onClick={() => setActiveTab('users')}
+              className={`px-6 py-3 font-semibold transition-colors ${
+                activeTab === 'users'
+                  ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
             >
-              Sign Out
+              👥 Users ({users.length})
             </button>
           </div>
         </header>
 
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 shadow-2xl mb-8">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-3xl font-bold text-white">Users ({users.length})</h2>
-            <button
-              onClick={() => setShowCreateForm(!showCreateForm)}
-              className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition"
-            >
-              {showCreateForm ? 'Cancel' : '+ Create User'}
-            </button>
-          </div>
+        {/* Overview Tab */}
+        {activeTab === 'overview' && dashboardData && (
+          <div className="space-y-6">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Total Users</p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {dashboardData.stats.totalUsers}
+                </p>
+              </div>
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Total Players</p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {dashboardData.stats.totalPlayers}
+                </p>
+              </div>
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Active Today</p>
+                <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                  {dashboardData.stats.activePlayersToday}
+                </p>
+              </div>
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Total Games</p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {dashboardData.stats.totalGames}
+                </p>
+              </div>
+            </div>
 
-          {showCreateForm && (
-            <form onSubmit={handleCreateUser} className="bg-white/10 p-6 rounded-lg mb-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-white mb-2">Username</label>
-                  <input
-                    type="text"
-                    value={newUser.username}
-                    onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
-                    className="w-full px-4 py-2 rounded-lg bg-white/20 text-white border-2 border-white/30"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-white mb-2">Password</label>
-                  <input
-                    type="password"
-                    value={newUser.password}
-                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                    className="w-full px-4 py-2 rounded-lg bg-white/20 text-white border-2 border-white/30"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-white mb-2">Role</label>
-                  <select
-                    value={newUser.role}
-                    onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-                    className="w-full px-4 py-2 rounded-lg bg-white/20 text-white border-2 border-white/30"
-                  >
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-white mb-2">Player Name (optional)</label>
-                  <input
-                    type="text"
-                    value={newUser.playerName}
-                    onChange={(e) => setNewUser({ ...newUser, playerName: e.target.value })}
-                    className="w-full px-4 py-2 rounded-lg bg-white/20 text-white border-2 border-white/30"
-                    placeholder="Link to player profile"
-                  />
+            {/* Active Players Today */}
+            {dashboardData.activePlayers.length > 0 && (
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                  🎯 Active Players Today
+                </h2>
+                <div className="space-y-3">
+                  {dashboardData.activePlayers.map((player) => (
+                    <div
+                      key={player.id}
+                      className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 flex justify-between items-center"
+                    >
+                      <div>
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {player.name}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {player.bets.length} bet{player.bets.length !== 1 ? 's' : ''} placed
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-blue-600 dark:text-blue-400">
+                          {player.points} pts
+                        </p>
+                        {player.bets.length > 0 && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Last: {formatDate(player.bets[0].createdAt)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <button
-                type="submit"
-                className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition"
-              >
-                Create User
-              </button>
-            </form>
-          )}
+            )}
 
-          <div className="space-y-4">
-            {users.map((user) => (
-              <div key={user.id} className="bg-white/10 p-6 rounded-lg">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-2xl font-bold text-white">{user.username}</h3>
-                    <p className="text-purple-200">
-                      Role: <span className="font-bold">{user.role}</span>
-                    </p>
-                    {user.player && (
-                      <p className="text-purple-200">
-                        Player: <span className="font-bold">{user.player.name}</span> ({user.player.points} pts)
-                      </p>
-                    )}
-                    <p className="text-purple-300 text-sm mt-1">
-                      Created: {new Date(user.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        setShowPasswordForm(user.id);
-                        setPasswordUpdate({ userId: user.id, password: '' });
-                      }}
-                      className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-bold rounded-lg transition"
+            {/* Recent Bets */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                📝 Recent Bets
+              </h2>
+              {dashboardData.recentBets.length > 0 ? (
+                <div className="space-y-3">
+                  {dashboardData.recentBets.map((bet) => (
+                    <div
+                      key={bet.id}
+                      className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4"
                     >
-                      Change Password
-                    </button>
-                    <button
-                      onClick={() => handleDeleteUser(user.id, user.username)}
-                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition"
-                    >
-                      Delete
-                    </button>
-                  </div>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">
+                            {bet.player.name}
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Predicted: {formatTime(bet.prediction)}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                            {new Date(bet.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-orange-600 dark:text-orange-400">
+                            {bet.betAmount} pts
+                          </p>
+                          {bet.winnings > 0 && (
+                            <p className="text-sm text-green-600 dark:text-green-400">
+                              Won: +{bet.winnings}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
+              ) : (
+                <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+                  No bets placed yet
+                </p>
+              )}
+            </div>
 
-                {showPasswordForm === user.id && (
-                  <form onSubmit={handleUpdatePassword} className="mt-4 p-4 bg-white/10 rounded-lg space-y-3">
+            {/* All Players */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                🏆 All Players
+              </h2>
+              <div className="space-y-2">
+                {dashboardData.players.map((player, index) => (
+                  <div
+                    key={player.id}
+                    className="flex justify-between items-center py-3 px-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-gray-500 dark:text-gray-400 font-mono text-sm w-8">
+                        #{index + 1}
+                      </span>
+                      <div>
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {player.name}
+                          {player.user && player.user.role === 'admin' && (
+                            <span className="ml-2 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-2 py-1 rounded-full">
+                              Admin
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          W: {player.gamesWon} | L: {player.gamesLost}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="font-bold text-blue-600 dark:text-blue-400">
+                      {player.points} pts
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Users Tab */}
+        {activeTab === 'users' && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                User Management
+              </h2>
+              <button
+                onClick={() => setShowCreateForm(!showCreateForm)}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors"
+              >
+                {showCreateForm ? 'Cancel' : '+ Create User'}
+              </button>
+            </div>
+
+            {showCreateForm && (
+              <form onSubmit={handleCreateUser} className="bg-gray-50 dark:bg-gray-700 p-6 rounded-xl mb-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-700 dark:text-gray-300 mb-2 text-sm font-medium">
+                      Username
+                    </label>
                     <input
-                      type="password"
-                      value={passwordUpdate.password}
-                      onChange={(e) => setPasswordUpdate({ ...passwordUpdate, password: e.target.value })}
-                      className="w-full px-4 py-2 rounded-lg bg-white/20 text-white border-2 border-white/30"
-                      placeholder="New password"
+                      type="text"
+                      value={newUser.username}
+                      onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
                       required
                     />
+                  </div>
+                  <div>
+                    <label className="block text-gray-700 dark:text-gray-300 mb-2 text-sm font-medium">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      value={newUser.password}
+                      onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-700 dark:text-gray-300 mb-2 text-sm font-medium">
+                      Role
+                    </label>
+                    <select
+                      value={newUser.role}
+                      onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                    >
+                      <option value="user">User</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-gray-700 dark:text-gray-300 mb-2 text-sm font-medium">
+                      Player Name (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={newUser.playerName}
+                      onChange={(e) => setNewUser({ ...newUser, playerName: e.target.value })}
+                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                      placeholder="Link to player"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors"
+                >
+                  Create User
+                </button>
+              </form>
+            )}
+
+            <div className="space-y-3">
+              {users.map((user) => (
+                <div key={user.id} className="bg-gray-50 dark:bg-gray-700 p-5 rounded-xl">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                          {user.username}
+                        </h3>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          user.role === 'admin'
+                            ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
+                            : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                        }`}>
+                          {user.role}
+                        </span>
+                      </div>
+                      {user.player && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Player: <span className="font-semibold">{user.player.name}</span> ({user.player.points} pts)
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                        Created: {new Date(user.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
                     <div className="flex gap-2">
                       <button
-                        type="submit"
-                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition"
+                        onClick={() => {
+                          setShowPasswordForm(user.id);
+                          setPasswordUpdate({ userId: user.id, password: '' });
+                        }}
+                        className="px-3 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-semibold rounded-lg transition-colors"
                       >
-                        Update
+                        Change Password
                       </button>
                       <button
-                        type="button"
-                        onClick={() => setShowPasswordForm(null)}
-                        className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-bold rounded-lg transition"
+                        onClick={() => handleDeleteUser(user.id, user.username)}
+                        className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors"
                       >
-                        Cancel
+                        Delete
                       </button>
                     </div>
-                  </form>
-                )}
-              </div>
-            ))}
+                  </div>
+
+                  {showPasswordForm === user.id && (
+                    <form onSubmit={handleUpdatePassword} className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg space-y-3">
+                      <input
+                        type="password"
+                        value={passwordUpdate.password}
+                        onChange={(e) => setPasswordUpdate({ ...passwordUpdate, password: e.target.value })}
+                        className="w-full px-4 py-2 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                        placeholder="New password"
+                        required
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          type="submit"
+                          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
+                        >
+                          Update
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowPasswordForm(null)}
+                          className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
