@@ -24,12 +24,13 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Lucka Betting",
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
