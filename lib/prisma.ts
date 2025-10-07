@@ -1,40 +1,26 @@
-import { PrismaClient } from "@prisma/client";
-// LibSQL adapter disabled due to compatibility issues
-// See LIBSQL_HTTP_ISSUE.md for details
-// import { PrismaLibSQL } from "@prisma/adapter-libsql";
-// import { createClient } from "@libsql/client";
+// Force Node.js runtime for Prisma compatibility
+export const runtime = "nodejs";
 
-const globalForPrisma = global as unknown as {
+import { PrismaClient } from "@prisma/client";
+
+const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
 function createPrismaClient() {
-  // LibSQL adapter code commented out due to build errors
-  // For Vercel deployment, use Turso or PostgreSQL instead
-  // See STATUS_SUMMARY.md for setup instructions
+  const databaseUrl = process.env.DATABASE_URL;
 
-  /*
-  const libsqlUrl = process.env.LIBSQL_URL;
-
-  if (libsqlUrl && libsqlUrl !== "undefined" && libsqlUrl.trim() !== "") {
-    try {
-      console.log("Initializing LibSQL adapter with URL:", libsqlUrl);
-      const libsqlClient = createClient({
-        url: libsqlUrl,
-      });
-      const adapter = new PrismaLibSQL(libsqlClient);
-      console.log("LibSQL adapter created successfully");
-      return new PrismaClient({ adapter });
-    } catch (error) {
-      console.error("Failed to initialize LibSQL adapter:", error);
-      console.log("Falling back to regular SQLite database");
-      return new PrismaClient();
-    }
+  if (!databaseUrl) {
+    console.warn("⚠️ DATABASE_URL not set — falling back to local SQLite");
+    return new PrismaClient();
   }
-  */
 
-  // For Vercel: Set DATABASE_URL to Turso or PostgreSQL connection string
-  console.log("Using database from DATABASE_URL");
+  if (databaseUrl.startsWith("postgresql://")) {
+    console.log("🔗 Connecting to PostgreSQL database...");
+  } else {
+    console.warn("⚠️ DATABASE_URL not PostgreSQL — using Prisma defaults");
+  }
+
   return new PrismaClient();
 }
 

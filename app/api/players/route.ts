@@ -1,18 +1,19 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 // Force Node.js runtime for Prisma compatibility
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    const players = await prisma.player.findMany({
-      orderBy: { points: 'desc' },
-    });
-    return NextResponse.json(players);
+    const users = await prisma.user.findMany();
+    return NextResponse.json(users);
   } catch (error) {
-    console.error('Error fetching players:', error);
-    return NextResponse.json({ error: 'Failed to fetch players', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
+    console.error(error);
+    return NextResponse.json(
+      { error: "Failed to fetch users" },
+      { status: 500 },
+    );
   }
 }
 
@@ -34,6 +35,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(player);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to create player' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create player" },
+      { status: 500 },
+    );
   }
 }
