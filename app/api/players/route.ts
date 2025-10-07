@@ -7,9 +7,18 @@ export const runtime = "nodejs";
 export async function GET() {
   try {
     const players = await prisma.player.findMany({
+      include: {
+        user: true,
+      },
       orderBy: { points: 'desc' },
     });
-    return NextResponse.json(players);
+
+    // Filter out admin users from the leaderboard
+    const nonAdminPlayers = players.filter(
+      player => !player.user || player.user.role !== 'admin'
+    );
+
+    return NextResponse.json(nonAdminPlayers);
   } catch (error) {
     console.error(error);
     return NextResponse.json(

@@ -555,13 +555,27 @@ export default function LuckaBetting() {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <div className="text-6xl mb-4 animate-bounce">⏳</div>
-                  <p className="text-gray-900 dark:text-white text-lg font-semibold mb-2">
-                    Waiting for results...
-                  </p>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm">
-                    Admin will reveal when Lucka arrives!
-                  </p>
+                  {bettingOpen ? (
+                    <>
+                      <div className="text-6xl mb-4">📊</div>
+                      <p className="text-gray-900 dark:text-white text-lg font-semibold mb-2">
+                        No results yet
+                      </p>
+                      <p className="text-gray-600 dark:text-gray-400 text-sm">
+                        Results will appear after Lucka arrives and admin reveals them
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-6xl mb-4">🔒</div>
+                      <p className="text-gray-900 dark:text-white text-lg font-semibold mb-2">
+                        Betting is closed
+                      </p>
+                      <p className="text-gray-600 dark:text-gray-400 text-sm">
+                        Come back between midnight and 8:20 AM to place your bet
+                      </p>
+                    </>
+                  )}
                 </div>
               )}
             </div>
