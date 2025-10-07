@@ -87,7 +87,10 @@ export default function LuckaBetting() {
       const response = await fetch("/api/players", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: session.user.name }),
+        body: JSON.stringify({
+          name: session.user.name,
+          username: session.user.name
+        }),
       });
 
       const player = await response.json();

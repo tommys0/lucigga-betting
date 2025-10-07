@@ -30,7 +30,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { name } = await request.json();
+    const { name, username } = await request.json();
 
     // Check if player exists
     let player = await prisma.player.findUnique({
@@ -42,10 +42,25 @@ export async function POST(request: Request) {
       player = await prisma.player.create({
         data: { name },
       });
+
+      // If username is provided, link the player to the user
+      if (username) {
+        const user = await prisma.user.findUnique({
+          where: { username }
+        });
+
+        if (user) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { playerId: player.id }
+          });
+        }
+      }
     }
 
     return NextResponse.json(player);
   } catch (error) {
+    console.error("Failed to create player:", error);
     return NextResponse.json(
       { error: "Failed to create player" },
       { status: 500 },
