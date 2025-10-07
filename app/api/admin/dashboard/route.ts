@@ -12,7 +12,25 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get today's date boundaries
+    // Get today's betting window (6 PM yesterday to 8:20 AM today, or 6 PM today onwards)
+    const now = new Date();
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+
+    let searchStart: Date;
+    if (hours < 8 || (hours === 8 && minutes < 20)) {
+      searchStart = new Date(startOfToday);
+      searchStart.setDate(searchStart.getDate() - 1);
+      searchStart.setHours(18, 0, 0, 0);
+    } else {
+      searchStart = new Date(startOfToday);
+      searchStart.setHours(18, 0, 0, 0);
+    }
+
+    // For all-time stats
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -102,6 +120,37 @@ export async function GET() {
       },
     });
 
+    // Get today's betting session bets
+    const todaysBets = await prisma.bet.findMany({
+      where: {
+        createdAt: {
+          gte: searchStart,
+        },
+      },
+      include: {
+        player: {
+          include: {
+            user: {
+              select: {
+                username: true,
+              },
+            },
+          },
+        },
+        game: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // Calculate today's betting stats
+    const bettingOpen = hours >= 18 || hours < 8 || (hours === 8 && minutes < 20);
+    let avgPrediction = 0;
+    if (todaysBets.length > 0) {
+      avgPrediction = todaysBets.reduce((sum, bet) => sum + bet.prediction, 0) / todaysBets.length;
+    }
+
     return NextResponse.json({
       stats: {
         totalUsers,
@@ -113,6 +162,12 @@ export async function GET() {
       activePlayers,
       players,
       recentBets,
+      todaysBets,
+      bettingStatus: {
+        isOpen: bettingOpen,
+        totalBets: todaysBets.length,
+        avgPrediction: Math.round(avgPrediction),
+      },
     });
   } catch (error) {
     console.error("Dashboard error:", error);
