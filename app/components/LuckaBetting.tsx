@@ -133,6 +133,11 @@ export default function LuckaBetting() {
     }
   };
 
+  /**
+   * Fetch today's bets for admin overview
+   * Displays current betting session status and all placed bets
+   * Automatically refreshes every minute
+   */
   const fetchTodaysBetsForAdmin = async () => {
     setLoadingAdminData(true);
     try {
@@ -516,7 +521,8 @@ export default function LuckaBetting() {
               </div>
 
               {session?.user?.role === "admin" ? (
-                // Admin Overview - Show today's betting status
+                // Admin Overview - Replaces betting form for admin users
+                // Shows real-time betting session data instead of loading state
                 <div className="space-y-4">
                   <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-3">
