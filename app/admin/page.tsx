@@ -17,6 +17,12 @@ interface DashboardData {
   activePlayers: any[];
   players: any[];
   recentBets: any[];
+  todaysBets: any[];
+  bettingStatus: {
+    isOpen: boolean;
+    totalBets: number;
+    avgPrediction: number;
+  };
 }
 
 interface User {
@@ -40,7 +46,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'users'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'todaysBets' | 'users'>('overview');
 
   const [newUser, setNewUser] = useState({
     username: '',
@@ -220,6 +226,16 @@ export default function AdminDashboard() {
               📊 Overview
             </button>
             <button
+              onClick={() => setActiveTab('todaysBets')}
+              className={`px-6 py-3 font-semibold transition-colors ${
+                activeTab === 'todaysBets'
+                  ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              🎯 Today's Bets {dashboardData && `(${dashboardData.todaysBets.length})`}
+            </button>
+            <button
               onClick={() => setActiveTab('users')}
               className={`px-6 py-3 font-semibold transition-colors ${
                 activeTab === 'users'
@@ -379,6 +395,100 @@ export default function AdminDashboard() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Today's Bets Tab */}
+        {activeTab === 'todaysBets' && dashboardData && (
+          <div className="space-y-6">
+            {/* Betting Status */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Current Betting Session
+                </h2>
+                {dashboardData.bettingStatus.isOpen ? (
+                  <span className="px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-xl font-bold">
+                    🟢 OPEN
+                  </span>
+                ) : (
+                  <span className="px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-xl font-bold">
+                    🔴 CLOSED
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Total Bets</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                    {dashboardData.bettingStatus.totalBets}
+                  </p>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Avg Prediction</p>
+                  <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                    {formatTime(dashboardData.bettingStatus.avgPrediction)}
+                  </p>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Betting Window</p>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white">
+                    6 PM - 8:20 AM
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* All Bets Today */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                📋 All Predictions
+              </h2>
+              {dashboardData.todaysBets.length > 0 ? (
+                <div className="space-y-3">
+                  {dashboardData.todaysBets.map((bet: any) => (
+                    <div
+                      key={bet.id}
+                      className="bg-gray-50 dark:bg-gray-700 rounded-xl p-5"
+                    >
+                      <div className="flex justify-between items-center">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <p className="font-bold text-gray-900 dark:text-white text-lg">
+                              {bet.player.name}
+                            </p>
+                            {bet.player.user && (
+                              <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-full">
+                                {bet.player.user.username}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Placed: {new Date(bet.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-4xl font-black text-blue-600 dark:text-blue-400">
+                            {formatTime(bet.prediction)}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            prediction
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-6xl mb-4">🎲</p>
+                  <p className="text-gray-600 dark:text-gray-400 text-lg">
+                    No bets placed yet for this session
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
