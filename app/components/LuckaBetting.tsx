@@ -46,12 +46,13 @@ export default function LuckaBetting() {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [myPlayer, setMyPlayer] = useState<Player | null>(null);
 
-  // Check if betting is open (midnight to 8:20 AM)
+  // Check if betting is open (6 PM to 8:20 AM next day)
   const isBettingOpen = () => {
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
-    return hours >= 0 && (hours < 8 || (hours === 8 && minutes < 20));
+    // Open from 6 PM (18:00) onwards OR before 8:20 AM
+    return hours >= 18 || hours < 8 || (hours === 8 && minutes < 20);
   };
 
   const [bettingOpen, setBettingOpen] = useState(isBettingOpen());
@@ -89,7 +90,7 @@ export default function LuckaBetting() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: session.user.name,
-          username: session.user.name
+          username: session.user.name,
         }),
       });
 
@@ -243,7 +244,7 @@ export default function LuckaBetting() {
                     className="w-10 h-10 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center justify-center transition-colors shadow-sm"
                     title="Toggle theme"
                   >
-                    {theme === 'light' ? '🌙' : '☀️'}
+                    {theme === "light" ? "🌙" : "☀️"}
                   </button>
                   {session?.user.role === "admin" && (
                     <button
@@ -254,13 +255,13 @@ export default function LuckaBetting() {
                       ⚙️
                     </button>
                   )}
-                  <button
+                  {/* <button
                     onClick={() => router.push("/players")}
                     className="w-10 h-10 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center justify-center transition-colors shadow-sm"
                     title="TV Mode"
                   >
                     📺
-                  </button>
+                  </button> */}
                   <button
                     onClick={() => signOut({ callbackUrl: "/login" })}
                     className="w-10 h-10 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center justify-center transition-colors shadow-sm"
@@ -331,19 +332,32 @@ export default function LuckaBetting() {
                 >
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-4">
-                      <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-2xl font-bold ${
-                        index === 0 ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400" :
-                        index === 1 ? "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300" :
-                        index === 2 ? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400" :
-                        "bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 text-lg"
-                      }`}>
-                        {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
+                      <div
+                        className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-2xl font-bold ${
+                          index === 0
+                            ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
+                            : index === 1
+                              ? "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300"
+                              : index === 2
+                                ? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400"
+                                : "bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 text-lg"
+                        }`}
+                      >
+                        {index === 0
+                          ? "🥇"
+                          : index === 1
+                            ? "🥈"
+                            : index === 2
+                              ? "🥉"
+                              : `#${index + 1}`}
                       </div>
                       <div>
                         <p className="text-gray-900 dark:text-white font-bold text-lg md:text-xl flex items-center gap-2">
                           {player.name}
                           {player.id === myPlayer?.id && (
-                            <span className="text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">You</span>
+                            <span className="text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">
+                              You
+                            </span>
                           )}
                         </p>
                         <p className="text-gray-600 dark:text-gray-400 text-sm flex items-center gap-3">
@@ -356,7 +370,9 @@ export default function LuckaBetting() {
                       <p className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400">
                         {player.points}
                       </p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">points</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        points
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -364,7 +380,9 @@ export default function LuckaBetting() {
               {players.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-4xl mb-2">🎮</p>
-                  <p className="text-gray-600 dark:text-gray-400">No players yet. Be the first!</p>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    No players yet. Be the first!
+                  </p>
                 </div>
               )}
             </div>
@@ -402,16 +420,28 @@ export default function LuckaBetting() {
                     </div>
                     <div className="space-y-3 bg-white dark:bg-gray-800 rounded-xl p-4">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600 dark:text-gray-400 text-sm">Player</span>
-                        <span className="text-gray-900 dark:text-white font-semibold">{myBet.playerName}</span>
+                        <span className="text-gray-600 dark:text-gray-400 text-sm">
+                          Player
+                        </span>
+                        <span className="text-gray-900 dark:text-white font-semibold">
+                          {myBet.playerName}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600 dark:text-gray-400 text-sm">Prediction</span>
-                        <span className="text-blue-600 dark:text-blue-400 font-bold">{formatTime(myBet.prediction)}</span>
+                        <span className="text-gray-600 dark:text-gray-400 text-sm">
+                          Prediction
+                        </span>
+                        <span className="text-blue-600 dark:text-blue-400 font-bold">
+                          {formatTime(myBet.prediction)}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600 dark:text-gray-400 text-sm">Bet Amount</span>
-                        <span className="text-gray-900 dark:text-white font-bold">{myBet.betAmount} pts</span>
+                        <span className="text-gray-600 dark:text-gray-400 text-sm">
+                          Bet Amount
+                        </span>
+                        <span className="text-gray-900 dark:text-white font-bold">
+                          {myBet.betAmount} pts
+                        </span>
                       </div>
                     </div>
                     <button
@@ -435,7 +465,8 @@ export default function LuckaBetting() {
                   {!bettingOpen && (
                     <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-center">
                       <p className="text-red-700 dark:text-red-400 text-sm">
-                        🔒 Betting is closed! Come back between midnight and 8:20 AM.
+                        🔒 Betting is closed! Come back between midnight and
+                        8:20 AM.
                       </p>
                     </div>
                   )}
@@ -450,7 +481,9 @@ export default function LuckaBetting() {
                         min="-30"
                         max="120"
                         value={prediction}
-                        onChange={(e) => setPrediction(parseInt(e.target.value))}
+                        onChange={(e) =>
+                          setPrediction(parseInt(e.target.value))
+                        }
                         className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-600"
                         disabled={!bettingOpen}
                       />
@@ -513,7 +546,9 @@ export default function LuckaBetting() {
                   <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 text-center">
                     <p className="text-yellow-700 dark:text-yellow-400 text-sm flex items-center justify-center gap-2">
                       <span>👑</span>
-                      <span>Admin only: Enter actual time to reveal results</span>
+                      <span>
+                        Admin only: Enter actual time to reveal results
+                      </span>
                     </p>
                   </div>
 
@@ -527,12 +562,16 @@ export default function LuckaBetting() {
                         min="-30"
                         max="120"
                         value={actualTime ?? 0}
-                        onChange={(e) => setActualTime(parseInt(e.target.value))}
+                        onChange={(e) =>
+                          setActualTime(parseInt(e.target.value))
+                        }
                         className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-orange-600"
                       />
                       <div className="mt-4 text-center">
                         <p className="text-4xl font-bold text-orange-600 dark:text-orange-400">
-                          {actualTime !== null ? formatTime(actualTime) : "Not set"}
+                          {actualTime !== null
+                            ? formatTime(actualTime)
+                            : "Not set"}
                         </p>
                       </div>
                     </div>
@@ -565,7 +604,8 @@ export default function LuckaBetting() {
                         No results yet
                       </p>
                       <p className="text-gray-600 dark:text-gray-400 text-sm">
-                        Results will appear after Lucka arrives and admin reveals them
+                        Results will appear after Lucka arrives and admin
+                        reveals them
                       </p>
                     </>
                   ) : (
@@ -589,7 +629,9 @@ export default function LuckaBetting() {
               <div className="inline-flex items-center gap-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-2xl px-6 py-4 mb-4">
                 <span className="text-4xl">🎊</span>
                 <div className="text-left">
-                  <p className="text-gray-600 dark:text-gray-400 text-sm">Lucka arrived</p>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">
+                    Lucka arrived
+                  </p>
                   <p className="text-3xl md:text-4xl font-bold text-purple-600 dark:text-purple-400">
                     {formatTime(actualTime!)}
                   </p>
@@ -610,9 +652,13 @@ export default function LuckaBetting() {
                   <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${
-                          result.netChange > 0 ? "bg-green-200 dark:bg-green-800" : "bg-red-200 dark:bg-red-800"
-                        }`}>
+                        <div
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${
+                            result.netChange > 0
+                              ? "bg-green-200 dark:bg-green-800"
+                              : "bg-red-200 dark:bg-red-800"
+                          }`}
+                        >
                           {result.netChange > 0 ? "🎉" : "😢"}
                         </div>
                         <p className="text-gray-900 dark:text-white font-bold text-xl md:text-2xl">
@@ -621,11 +667,20 @@ export default function LuckaBetting() {
                       </div>
                       <div className="space-y-1 ml-13">
                         <p className="text-gray-600 dark:text-gray-400 text-sm">
-                          Predicted: <span className="font-semibold text-gray-900 dark:text-white">{formatTime(result.prediction)}</span>
-                          <span className="text-gray-500 dark:text-gray-500"> (off by {Math.abs(result.difference)} min)</span>
+                          Predicted:{" "}
+                          <span className="font-semibold text-gray-900 dark:text-white">
+                            {formatTime(result.prediction)}
+                          </span>
+                          <span className="text-gray-500 dark:text-gray-500">
+                            {" "}
+                            (off by {Math.abs(result.difference)} min)
+                          </span>
                         </p>
                         <p className="text-gray-600 dark:text-gray-400 text-sm">
-                          Bet: <span className="font-semibold text-gray-900 dark:text-white">{result.betAmount} pts</span>
+                          Bet:{" "}
+                          <span className="font-semibold text-gray-900 dark:text-white">
+                            {result.betAmount} pts
+                          </span>
                         </p>
                       </div>
                     </div>
@@ -638,7 +693,9 @@ export default function LuckaBetting() {
                         <>
                           <p
                             className={`text-3xl md:text-4xl font-bold mb-1 ${
-                              result.netChange > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                              result.netChange > 0
+                                ? "text-green-600 dark:text-green-400"
+                                : "text-red-600 dark:text-red-400"
                             }`}
                           >
                             {result.netChange > 0 ? "+" : ""}
@@ -651,7 +708,9 @@ export default function LuckaBetting() {
                             <span className="text-blue-600 dark:text-blue-400 text-lg font-bold">
                               {result.newPoints}
                             </span>
-                            <span className="text-gray-600 dark:text-gray-400 text-xs">pts</span>
+                            <span className="text-gray-600 dark:text-gray-400 text-xs">
+                              pts
+                            </span>
                           </div>
                         </>
                       )}
