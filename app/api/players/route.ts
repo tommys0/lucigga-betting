@@ -8,7 +8,8 @@ export async function GET() {
     });
     return NextResponse.json(players);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch players' }, { status: 500 });
+    console.error('Error fetching players:', error);
+    return NextResponse.json({ error: 'Failed to fetch players', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
   }
 }
 

@@ -1,0 +1,24 @@
+{
+  "name": "Lucka Betting - How Late Will She Be?",
+  "short_name": "Lucka Betting",
+  "description": "Place bets on Lucka's punctuality!",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#581c87",
+  "theme_color": "#581c87",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

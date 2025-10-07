@@ -1,14 +1,14 @@
-import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
-import { prisma } from '@/lib/prisma';
-import * as bcrypt from 'bcryptjs';
+import { NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import * as bcrypt from "bcryptjs";
 
 export async function GET() {
   try {
     const session = await auth();
 
-    if (!session || session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session || session.user.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const users = await prisma.user.findMany({
@@ -25,12 +25,15 @@ export async function GET() {
         },
         createdAt: true,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     return NextResponse.json(users);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch users" },
+      { status: 500 },
+    );
   }
 }
 
@@ -38,8 +41,8 @@ export async function POST(request: Request) {
   try {
     const session = await auth();
 
-    if (!session || session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session || session.user.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { username, password, role, playerName } = await request.json();
@@ -50,7 +53,10 @@ export async function POST(request: Request) {
     });
 
     if (existingUser) {
-      return NextResponse.json({ error: 'Username already exists' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Username already exists" },
+        { status: 400 },
+      );
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -94,8 +100,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json(user);
   } catch (error) {
-    console.error('Create user error:', error);
-    return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
+    console.error("Create user error:", error);
+    return NextResponse.json(
+      { error: "Failed to create user" },
+      { status: 500 },
+    );
   }
 }
 
@@ -103,8 +112,8 @@ export async function PATCH(request: Request) {
   try {
     const session = await auth();
 
-    if (!session || session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session || session.user.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { userId, password } = await request.json();
@@ -123,7 +132,10 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json(user);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update password' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update password" },
+      { status: 500 },
+    );
   }
 }
 
@@ -131,15 +143,15 @@ export async function DELETE(request: Request) {
   try {
     const session = await auth();
 
-    if (!session || session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session || session.user.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('id');
+    const userId = searchParams.get("id");
 
     if (!userId) {
-      return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+      return NextResponse.json({ error: "User ID required" }, { status: 400 });
     }
 
     await prisma.user.delete({
@@ -148,6 +160,9 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to delete user" },
+      { status: 500 },
+    );
   }
 }

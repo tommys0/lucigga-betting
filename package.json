@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "next build",
     "start": "next start",
     "seed": "tsx prisma/seed.ts"
   },
@@ -12,6 +12,8 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@libsql/client": "^0.15.15",
+    "@prisma/adapter-libsql": "^6.16.3",
     "@prisma/client": "^6.16.3",
     "bcryptjs": "^3.0.2",
     "next": "15.5.4",

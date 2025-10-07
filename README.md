@@ -23,12 +23,19 @@ A fun multiplayer betting app where classmates can bet on how late Lucka will ar
 - Secure login system with NextAuth
 - User and admin roles
 - Password management
+- 30-day persistent login (stay logged in!)
 
 ⚙️ **Admin Dashboard**
 - Create and manage users
 - Change passwords
 - Link users to player profiles
 - Delete users
+
+📱 **Mobile PWA**
+- Fully responsive design
+- Add to home screen on iOS/Android
+- Works like a native app
+- Perfect for daily morning bets!
 
 ## Tech Stack
 
@@ -100,6 +107,22 @@ Visit `/players` to display the leaderboard:
 - Displays wins/losses
 - Auto-refreshes every 5 seconds
 - Optimized for TV display
+
+### Mobile Access (PWA)
+
+**Add to Home Screen:**
+1. Open app on your phone's browser
+2. Use "Add to Home Screen" option
+3. App appears as an icon on your home screen
+4. Opens like a native app!
+
+**Benefits:**
+- ✅ Stay logged in for 30 days
+- ✅ Quick access each morning
+- ✅ No need to type URL
+- ✅ Full responsive design
+
+See `PWA_SETUP.md` for detailed instructions!
 
 ## Payout Structure
 

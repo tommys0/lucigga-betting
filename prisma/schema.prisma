@@ -2,7 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["schemaEngineDriverAdapters"]
 }
 
 datasource db {
@@ -13,7 +14,7 @@ datasource db {
 model User {
   id        String   @id @default(cuid())
   username  String   @unique
-  password  String   // hashed password
+  password  String // hashed password
   role      String   @default("user") // "user" or "admin"
   playerId  String?  @unique
   player    Player?  @relation(fields: [playerId], references: [id])
@@ -35,21 +36,21 @@ model Player {
 }
 
 model Game {
-  id          String   @id @default(cuid())
-  actualTime  Int      // minutes (negative = early, positive = late)
-  playedAt    DateTime @default(now())
-  bets        Bet[]
+  id         String   @id @default(cuid())
+  actualTime Int // minutes (negative = early, positive = late)
+  playedAt   DateTime @default(now())
+  bets       Bet[]
 }
 
 model Bet {
   id         String   @id @default(cuid())
   playerId   String
   gameId     String
-  prediction Int      // minutes (negative = early, positive = late)
+  prediction Int // minutes (negative = early, positive = late)
   betAmount  Int
   winnings   Int      @default(0)
   createdAt  DateTime @default(now())
 
-  player     Player   @relation(fields: [playerId], references: [id])
-  game       Game     @relation(fields: [gameId], references: [id])
+  player Player @relation(fields: [playerId], references: [id])
+  game   Game   @relation(fields: [gameId], references: [id])
 }
