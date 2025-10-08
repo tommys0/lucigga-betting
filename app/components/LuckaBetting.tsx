@@ -4,6 +4,29 @@ import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "./ThemeProvider";
+import {
+  Clock,
+  Trophy,
+  Moon,
+  Sun,
+  Settings,
+  LogOut,
+  Circle,
+  Target,
+  Crown,
+  ClipboardList,
+  CheckCircle,
+  X,
+  Lock,
+  BarChart3,
+  Sparkles,
+  RefreshCw,
+  Inbox,
+  Hourglass,
+  Gamepad2,
+  Medal,
+  Award
+} from "lucide-react";
 
 interface Bet {
   playerName: string;
@@ -324,7 +347,7 @@ export default function LuckaBetting() {
 
                 {/* Center: App Title */}
                 <div className="flex items-center gap-2 justify-center md:flex-1">
-                  <span className="text-3xl">⏰</span>
+                  <Clock className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                   <div className="text-center">
                     <h1 className="text-xl font-bold text-gray-900 dark:text-white">
                       Lucka's Arrival
@@ -339,33 +362,41 @@ export default function LuckaBetting() {
                 <div className="flex gap-2 justify-center md:justify-end md:min-w-[200px]">
                   <button
                     onClick={() => setShowLeaderboard(!showLeaderboard)}
-                    className="w-10 h-10 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center transition-colors text-xl"
+                    className="w-10 h-10 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center transition-colors"
                     title="Toggle Leaderboard"
                   >
-                    {showLeaderboard ? "🎲" : "🏆"}
+                    {showLeaderboard ? (
+                      <Gamepad2 className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                    ) : (
+                      <Trophy className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                    )}
                   </button>
                   <button
                     onClick={toggleTheme}
-                    className="w-10 h-10 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center transition-colors text-xl"
+                    className="w-10 h-10 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center transition-colors"
                     title="Toggle theme"
                   >
-                    {theme === "light" ? "🌙" : "☀️"}
+                    {theme === "light" ? (
+                      <Moon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                    ) : (
+                      <Sun className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                    )}
                   </button>
                   {session?.user.role === "admin" && (
                     <button
                       onClick={() => router.push("/admin")}
-                      className="w-10 h-10 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center transition-colors text-xl"
+                      className="w-10 h-10 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center transition-colors"
                       title="Admin"
                     >
-                      ⚙️
+                      <Settings className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                     </button>
                   )}
                   <button
                     onClick={() => signOut({ callbackUrl: "/login" })}
-                    className="w-10 h-10 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center transition-colors text-xl"
+                    className="w-10 h-10 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center transition-colors"
                     title="Sign Out"
                   >
-                    🚪
+                    <LogOut className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                   </button>
                 </div>
               </div>
@@ -377,7 +408,7 @@ export default function LuckaBetting() {
             {bettingOpen ? (
               <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-4 border border-green-200 dark:border-green-800 shadow-sm">
                 <div className="flex items-center justify-center gap-2 md:gap-3">
-                  <span className="text-2xl md:text-3xl">🟢</span>
+                  <Circle className="w-6 h-6 md:w-8 md:h-8 fill-green-500 text-green-500" />
                   <p className="text-green-700 dark:text-green-400 text-base md:text-lg font-semibold md:font-bold text-center">
                     Betting is OPEN until 8:20 AM
                   </p>
@@ -387,7 +418,7 @@ export default function LuckaBetting() {
               <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-4 border border-red-200 dark:border-red-800 shadow-sm">
                 <div className="flex flex-col items-center justify-center gap-2">
                   <div className="flex items-center gap-2 md:gap-3">
-                    <span className="text-2xl md:text-3xl">🔴</span>
+                    <Circle className="w-6 h-6 md:w-8 md:h-8 fill-red-500 text-red-500" />
                     <p className="text-red-700 dark:text-red-400 text-base md:text-lg font-semibold md:font-bold">
                       Betting is CLOSED
                     </p>
@@ -406,11 +437,11 @@ export default function LuckaBetting() {
             {/* Leaderboard Header */}
             <div className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-500 dark:from-yellow-600 dark:via-yellow-700 dark:to-orange-600 p-4 md:p-6 text-center">
               <div className="flex items-center justify-center gap-2 md:gap-3 mb-1 md:mb-2">
-                <span className="text-2xl md:text-4xl">🏆</span>
+                <Trophy className="w-6 h-6 md:w-10 md:h-10 text-white" />
                 <h2 className="text-2xl md:text-3xl font-bold md:font-black text-white drop-shadow-md">
                   LEADERBOARD
                 </h2>
-                <span className="text-2xl md:text-4xl">🏆</span>
+                <Trophy className="w-6 h-6 md:w-10 md:h-10 text-white" />
               </div>
               <p className="text-white/90 text-xs md:text-sm font-medium">
                 Top {players.length} Players
@@ -459,7 +490,15 @@ export default function LuckaBetting() {
                                   : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-base"
                           }`}
                         >
-                          {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : index + 1}
+                          {index === 0 ? (
+                            <Medal className="w-6 h-6" />
+                          ) : index === 1 ? (
+                            <Medal className="w-6 h-6" />
+                          ) : index === 2 ? (
+                            <Medal className="w-6 h-6" />
+                          ) : (
+                            index + 1
+                          )}
                         </div>
                       </td>
 
@@ -514,7 +553,7 @@ export default function LuckaBetting() {
 
               {players.length === 0 && (
                 <div className="text-center py-12">
-                  <p className="text-5xl mb-3">🎮</p>
+                  <Gamepad2 className="w-16 h-16 mx-auto mb-3 text-gray-400" />
                   <p className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
                     No players yet
                   </p>
@@ -533,17 +572,20 @@ export default function LuckaBetting() {
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 md:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
               <div className="mb-5 md:mb-6">
                 <div className="flex items-center gap-2 md:gap-3 mb-3">
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-600 dark:bg-blue-500 rounded-xl flex items-center justify-center text-xl md:text-2xl">
-                    🎯
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-600 dark:bg-blue-500 rounded-xl flex items-center justify-center">
+                    <Target className="w-5 h-5 md:w-6 md:h-6 text-white" />
                   </div>
                   <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
                     Place Your Bet
                   </h2>
                 </div>
                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3 border border-blue-200 dark:border-blue-800">
-                  <p className="text-blue-700 dark:text-blue-300 text-xs md:text-sm">
-                    <span className="font-bold">📊 Point System:</span> Earn up to 10 points per round!
-                    <span className="block mt-1">Formula: <span className="font-mono font-bold">10 - minutes off</span></span>
+                  <p className="text-blue-700 dark:text-blue-300 text-xs md:text-sm flex items-start gap-2">
+                    <BarChart3 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <span>
+                      <span className="font-bold">Point System:</span> Earn up to 10 points per round!
+                      <span className="block mt-1">Formula: <span className="font-mono font-bold">10 - minutes off</span></span>
+                    </span>
                   </p>
                 </div>
               </div>
@@ -554,7 +596,7 @@ export default function LuckaBetting() {
                 <div className="space-y-4">
                   <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-2xl">👑</span>
+                      <Crown className="w-6 h-6 text-purple-700 dark:text-purple-400" />
                       <h3 className="text-purple-700 dark:text-purple-400 font-bold text-lg">
                         Admin Overview
                       </h3>
@@ -566,7 +608,7 @@ export default function LuckaBetting() {
 
                   {loadingAdminData ? (
                     <div className="text-center py-8">
-                      <div className="animate-spin text-4xl mb-3">⏳</div>
+                      <Hourglass className="w-10 h-10 mx-auto mb-3 text-gray-400 animate-spin" />
                       <p className="text-gray-600 dark:text-gray-400 text-sm">
                         Loading betting data...
                       </p>
@@ -585,10 +627,14 @@ export default function LuckaBetting() {
                             </p>
                           </div>
                           <div className="text-center">
-                            <p className="text-blue-600 dark:text-blue-400 text-2xl font-bold">
-                              {bettingOpen ? "🟢" : "🔴"}
-                            </p>
-                            <p className="text-blue-700 dark:text-blue-300 text-xs">
+                            <Circle
+                              className={`w-6 h-6 mx-auto ${
+                                bettingOpen
+                                  ? "fill-green-500 text-green-500"
+                                  : "fill-red-500 text-red-500"
+                              }`}
+                            />
+                            <p className="text-blue-700 dark:text-blue-300 text-xs mt-1">
                               {bettingOpen ? "Open" : "Closed"}
                             </p>
                           </div>
@@ -598,8 +644,9 @@ export default function LuckaBetting() {
                       {/* Today's Bets List */}
                       {todaysBets.length > 0 ? (
                         <div className="space-y-2 max-h-96 overflow-y-auto">
-                          <p className="text-gray-700 dark:text-gray-300 font-semibold text-sm mb-2">
-                            📋 Today's Bets:
+                          <p className="text-gray-700 dark:text-gray-300 font-semibold text-sm mb-2 flex items-center gap-2">
+                            <ClipboardList className="w-4 h-4" />
+                            Today's Bets:
                           </p>
                           {todaysBets.map((bet) => (
                             <div
@@ -629,7 +676,7 @@ export default function LuckaBetting() {
                         </div>
                       ) : (
                         <div className="text-center py-8 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                          <p className="text-4xl mb-2">📭</p>
+                          <Inbox className="w-10 h-10 mx-auto mb-2 text-gray-400" />
                           <p className="text-gray-600 dark:text-gray-400 text-sm">
                             No bets placed yet today
                           </p>
@@ -641,7 +688,7 @@ export default function LuckaBetting() {
                         onClick={() => router.push("/admin")}
                         className="w-full py-3 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md"
                       >
-                        <span className="text-xl">⚙️</span>
+                        <Settings className="w-5 h-5" />
                         <span>Full Admin Dashboard</span>
                       </button>
                     </>
@@ -649,7 +696,7 @@ export default function LuckaBetting() {
                 </div>
               ) : !myPlayer ? (
                 <div className="text-center py-12">
-                  <div className="animate-spin text-5xl mb-4">⚙️</div>
+                  <Settings className="w-12 h-12 mx-auto mb-4 text-gray-400 animate-spin" />
                   <p className="text-gray-600 dark:text-gray-400 text-lg">
                     Setting up your profile...
                   </p>
@@ -658,7 +705,7 @@ export default function LuckaBetting() {
                 <div className="space-y-4">
                   <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-6">
                     <div className="flex items-center gap-2 mb-4">
-                      <span className="text-3xl">✅</span>
+                      <CheckCircle className="w-8 h-8 text-green-700 dark:text-green-400" />
                       <h3 className="text-green-700 dark:text-green-400 font-bold text-xl">
                         Bet Placed!
                       </h3>
@@ -682,15 +729,23 @@ export default function LuckaBetting() {
                       onClick={removeBet}
                       className="w-full mt-4 py-3 md:py-4 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold md:font-bold rounded-xl transition-colors flex items-center justify-center gap-2 md:gap-3 shadow-lg text-base md:text-lg min-h-[48px] md:min-h-[56px]"
                     >
-                      <span className="text-xl md:text-2xl">❌</span>
+                      <X className="w-5 h-5 md:w-6 md:h-6" />
                       <span>Change Bet</span>
                     </button>
                   </div>
                   <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 text-center">
-                    <p className="text-yellow-700 dark:text-yellow-400 text-sm">
-                      {bettingOpen
-                        ? "⏳ Waiting for Lucka to arrive..."
-                        : "🔒 Betting closed. Waiting for results..."}
+                    <p className="text-yellow-700 dark:text-yellow-400 text-sm flex items-center justify-center gap-2">
+                      {bettingOpen ? (
+                        <>
+                          <Hourglass className="w-4 h-4" />
+                          <span>Waiting for Lucka to arrive...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="w-4 h-4" />
+                          <span>Betting closed. Waiting for results...</span>
+                        </>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -698,8 +753,9 @@ export default function LuckaBetting() {
                 <div className="space-y-6">
                   {!bettingOpen && (
                     <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-center">
-                      <p className="text-red-700 dark:text-red-400 text-sm">
-                        🔒 Betting closed! Come back between 6 PM and 8:20 AM.
+                      <p className="text-red-700 dark:text-red-400 text-sm flex items-center justify-center gap-2">
+                        <Lock className="w-4 h-4" />
+                        <span>Betting closed! Come back between 6 PM and 8:20 AM.</span>
                       </p>
                     </div>
                   )}
@@ -730,8 +786,9 @@ export default function LuckaBetting() {
 
                   <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-xl p-4 border border-green-200 dark:border-green-800">
                     <div className="text-center">
-                      <p className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
-                        💡 Point Preview
+                      <p className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2 flex items-center justify-center gap-2">
+                        <Sparkles className="w-4 h-4" />
+                        Point Preview
                       </p>
                       <div className="flex items-center justify-center gap-4">
                         <div>
@@ -759,7 +816,7 @@ export default function LuckaBetting() {
                     disabled={!bettingOpen}
                     className="w-full py-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-gray-400 dark:disabled:bg-gray-600 text-white font-bold rounded-xl text-lg md:text-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 md:gap-3 shadow-lg min-h-[56px]"
                   >
-                    <span className="text-2xl md:text-3xl">🎯</span>
+                    <Target className="w-6 h-6 md:w-7 md:h-7" />
                     <span>Place Bet</span>
                   </button>
                 </div>
@@ -769,8 +826,8 @@ export default function LuckaBetting() {
             {/* Right side - Admin reveal results */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 md:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
               <div className="flex items-center gap-2 md:gap-3 mb-5 md:mb-6">
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-orange-600 dark:bg-orange-500 rounded-xl flex items-center justify-center text-xl md:text-2xl">
-                  🎊
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-orange-600 dark:bg-orange-500 rounded-xl flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-white" />
                 </div>
                 <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
                   Reveal Results
@@ -781,7 +838,7 @@ export default function LuckaBetting() {
                 <div className="space-y-6">
                   <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 text-center">
                     <p className="text-yellow-700 dark:text-yellow-400 text-sm flex items-center justify-center gap-2">
-                      <span>👑</span>
+                      <Crown className="w-4 h-4" />
                       <span>
                         Admin only: Enter actual time to award points
                       </span>
@@ -817,7 +874,7 @@ export default function LuckaBetting() {
                   {bettingOpen && (
                     <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 text-center">
                       <p className="text-yellow-700 dark:text-yellow-400 text-sm flex items-center justify-center gap-2">
-                        <span>⏳</span>
+                        <Hourglass className="w-4 h-4" />
                         <span>
                           Results can only be revealed after betting closes (8:20 AM)
                         </span>
@@ -833,22 +890,22 @@ export default function LuckaBetting() {
                   >
                     {loading ? (
                       <>
-                        <span className="animate-spin text-2xl md:text-3xl">⏳</span>
+                        <Hourglass className="w-6 h-6 md:w-7 md:h-7 animate-spin" />
                         <span>Processing...</span>
                       </>
                     ) : bettingOpen ? (
                       <>
-                        <span className="text-2xl md:text-3xl">🔒</span>
+                        <Lock className="w-6 h-6 md:w-7 md:h-7" />
                         <span>Betting Still Open</span>
                       </>
                     ) : todaysBets.length === 0 ? (
                       <>
-                        <span className="text-2xl md:text-3xl">📭</span>
+                        <Inbox className="w-6 h-6 md:w-7 md:h-7" />
                         <span>No Bets to Process</span>
                       </>
                     ) : (
                       <>
-                        <span className="text-2xl md:text-3xl">🎊</span>
+                        <Sparkles className="w-6 h-6 md:w-7 md:h-7" />
                         <span>Reveal Results</span>
                       </>
                     )}
@@ -858,7 +915,7 @@ export default function LuckaBetting() {
                 <div className="text-center py-12">
                   {bettingOpen ? (
                     <>
-                      <div className="text-6xl mb-4">📊</div>
+                      <BarChart3 className="w-16 h-16 mx-auto mb-4 text-gray-400" />
                       <p className="text-gray-900 dark:text-white text-lg font-semibold mb-2">
                         No results yet
                       </p>
@@ -868,7 +925,7 @@ export default function LuckaBetting() {
                     </>
                   ) : (
                     <>
-                      <div className="text-6xl mb-4">🔒</div>
+                      <Lock className="w-16 h-16 mx-auto mb-4 text-gray-400" />
                       <p className="text-gray-900 dark:text-white text-lg font-semibold mb-2">
                         Betting is closed
                       </p>
@@ -885,7 +942,7 @@ export default function LuckaBetting() {
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 md:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
             <div className="text-center mb-6 md:mb-8">
               <div className="inline-flex items-center gap-2 md:gap-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-2xl px-5 md:px-6 py-3 md:py-4 mb-4">
-                <span className="text-3xl md:text-4xl">🎊</span>
+                <Sparkles className="w-8 h-8 md:w-10 md:h-10 text-purple-600 dark:text-purple-400" />
                 <div className="text-left">
                   <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm">
                     Lucka arrived
@@ -911,13 +968,17 @@ export default function LuckaBetting() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
                         <div
-                          className={`w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center text-lg md:text-xl ${
+                          className={`w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center ${
                             result.netChange > 0
                               ? "bg-green-200 dark:bg-green-800"
                               : "bg-gray-200 dark:bg-gray-600"
                           }`}
                         >
-                          {result.netChange > 0 ? "🎉" : "📊"}
+                          {result.netChange > 0 ? (
+                            <Award className="w-5 h-5 md:w-6 md:h-6 text-green-700 dark:text-green-300" />
+                          ) : (
+                            <BarChart3 className="w-5 h-5 md:w-6 md:h-6 text-gray-600 dark:text-gray-400" />
+                          )}
                         </div>
                         <p className="text-gray-900 dark:text-white font-bold text-lg md:text-xl">
                           {result.playerName}
@@ -941,7 +1002,7 @@ export default function LuckaBetting() {
                                   ? "text-orange-600 dark:text-orange-400"
                                   : "text-gray-600 dark:text-gray-400"
                           }`}>
-                            {result.difference === 0 ? "Perfect! 🎯" : `Off by ${Math.abs(result.difference)} min`}
+                            {result.difference === 0 ? "Perfect!" : `Off by ${Math.abs(result.difference)} min`}
                           </span>
                         </p>
                       </div>
@@ -985,7 +1046,7 @@ export default function LuckaBetting() {
               onClick={resetGame}
               className="w-full py-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-bold rounded-xl text-lg md:text-xl transition-colors flex items-center justify-center gap-2 md:gap-3 shadow-lg min-h-[56px]"
             >
-              <span className="text-2xl md:text-3xl">🔄</span>
+              <RefreshCw className="w-6 h-6 md:w-7 md:h-7" />
               <span>New Game</span>
             </button>
           </div>

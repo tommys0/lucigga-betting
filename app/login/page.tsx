@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { Clock } from 'lucide-react';
 
 function LoginForm() {
   const [username, setUsername] = useState('');
@@ -48,9 +49,12 @@ function LoginForm() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4 py-8">
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 md:p-8 shadow-xl max-w-md w-full border border-gray-200 dark:border-gray-700">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2 text-center">
-          ⏰ Lucka Betting
-        </h1>
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Clock className="w-8 h-8 md:w-10 md:h-10 text-blue-600 dark:text-blue-400" />
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white text-center">
+            Lucka Betting
+          </h1>
+        </div>
         <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base text-center mb-6 md:mb-8">
           Sign in to place your bets
         </p>

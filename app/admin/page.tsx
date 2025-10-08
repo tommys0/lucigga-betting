@@ -5,6 +5,18 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { useTheme } from '../components/ThemeProvider';
+import {
+  Shield,
+  Moon,
+  Sun,
+  BarChart3,
+  Target,
+  Users,
+  Circle,
+  ClipboardList,
+  Dices,
+  Trophy,
+} from 'lucide-react';
 
 interface DashboardData {
   stats: {
@@ -181,13 +193,14 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <header className="mb-8">
-          <div className="flex justify-between items-center mb-6">
+        <header className="mb-6 md:mb-8">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                🔐 Admin Dashboard
+              <h1 className="text-2xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2 md:gap-3">
+                <Shield className="w-6 h-6 md:w-10 md:h-10 text-blue-600 dark:text-blue-400" />
+                Admin Dashboard
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">
                 Monitor betting activity and manage users
               </p>
             </div>
@@ -196,54 +209,66 @@ export default function AdminDashboard() {
                 onClick={toggleTheme}
                 className="w-10 h-10 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center justify-center transition-colors"
               >
-                {theme === 'light' ? '🌙' : '☀️'}
+                {theme === 'light' ? (
+                  <Moon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                ) : (
+                  <Sun className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                )}
               </button>
               <button
                 onClick={() => router.push('/')}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors"
+                className="px-3 md:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors text-sm md:text-base"
               >
-                ← Back
+                <span className="hidden md:inline">← Back</span>
+                <span className="md:hidden">←</span>
               </button>
               <button
                 onClick={() => signOut({ callbackUrl: '/login' })}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors"
+                className="px-3 md:px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors text-sm md:text-base"
               >
-                Sign Out
+                <span className="hidden md:inline">Sign Out</span>
+                <span className="md:hidden">Exit</span>
               </button>
             </div>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex gap-1 md:gap-2 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`px-6 py-3 font-semibold transition-colors ${
+              className={`px-3 md:px-6 py-3 font-semibold transition-colors whitespace-nowrap flex items-center gap-1 md:gap-2 text-sm md:text-base ${
                 activeTab === 'overview'
                   ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
-              📊 Overview
+              <BarChart3 className="w-4 h-4" />
+              <span className="hidden sm:inline">Overview</span>
             </button>
             <button
               onClick={() => setActiveTab('todaysBets')}
-              className={`px-6 py-3 font-semibold transition-colors ${
+              className={`px-3 md:px-6 py-3 font-semibold transition-colors whitespace-nowrap flex items-center gap-1 md:gap-2 text-sm md:text-base ${
                 activeTab === 'todaysBets'
                   ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
-              🎯 Today's Bets {dashboardData && `(${dashboardData.todaysBets.length})`}
+              <Target className="w-4 h-4" />
+              <span className="hidden sm:inline">Today's Bets</span>
+              <span className="sm:hidden">Bets</span>
+              {dashboardData && <span className="text-xs">({dashboardData.todaysBets.length})</span>}
             </button>
             <button
               onClick={() => setActiveTab('users')}
-              className={`px-6 py-3 font-semibold transition-colors ${
+              className={`px-3 md:px-6 py-3 font-semibold transition-colors whitespace-nowrap flex items-center gap-1 md:gap-2 text-sm md:text-base ${
                 activeTab === 'users'
                   ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
-              👥 Users ({users.length})
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Users</span>
+              <span className="text-xs">({users.length})</span>
             </button>
           </div>
         </header>
@@ -282,8 +307,9 @@ export default function AdminDashboard() {
             {/* Active Players Today */}
             {dashboardData.activePlayers.length > 0 && (
               <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                  🎯 Active Players Today
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Target className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  Active Players Today
                 </h2>
                 <div className="space-y-3">
                   {dashboardData.activePlayers.map((player) => (
@@ -317,8 +343,9 @@ export default function AdminDashboard() {
 
             {/* Recent Bets */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                📝 Recent Bets
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <ClipboardList className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                Recent Bets
               </h2>
               {dashboardData.recentBets.length > 0 ? (
                 <div className="space-y-3">
@@ -362,8 +389,9 @@ export default function AdminDashboard() {
 
             {/* All Players */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                🏆 All Players
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                All Players
               </h2>
               <div className="space-y-2">
                 {dashboardData.players.map((player, index) => (
@@ -409,12 +437,14 @@ export default function AdminDashboard() {
                   Current Betting Session
                 </h2>
                 {dashboardData.bettingStatus.isOpen ? (
-                  <span className="px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-xl font-bold">
-                    🟢 OPEN
+                  <span className="px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-xl font-bold flex items-center gap-2">
+                    <Circle className="w-4 h-4 fill-green-500 text-green-500" />
+                    OPEN
                   </span>
                 ) : (
-                  <span className="px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-xl font-bold">
-                    🔴 CLOSED
+                  <span className="px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-xl font-bold flex items-center gap-2">
+                    <Circle className="w-4 h-4 fill-red-500 text-red-500" />
+                    CLOSED
                   </span>
                 )}
               </div>
@@ -443,8 +473,9 @@ export default function AdminDashboard() {
 
             {/* All Bets Today */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                📋 All Predictions
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <ClipboardList className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                All Predictions
               </h2>
               {dashboardData.todaysBets.length > 0 ? (
                 <div className="space-y-3">
@@ -483,7 +514,7 @@ export default function AdminDashboard() {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <p className="text-6xl mb-4">🎲</p>
+                  <Dices className="w-16 h-16 mx-auto mb-4 text-gray-400" />
                   <p className="text-gray-600 dark:text-gray-400 text-lg">
                     No bets placed yet for this session
                   </p>
