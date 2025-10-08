@@ -215,6 +215,13 @@ export default function LuckaBetting() {
   const removeBet = async () => {
     if (!myPlayer) return;
 
+    if (!bettingOpen) {
+      alert(
+        "Betting is closed! You can no longer change your bet after 8:20 AM.",
+      );
+      return;
+    }
+
     try {
       const response = await fetch(`/api/bets?playerName=${encodeURIComponent(myPlayer.name)}`, {
         method: "DELETE",

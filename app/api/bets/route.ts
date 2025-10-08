@@ -192,6 +192,16 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Player name is required' }, { status: 400 });
     }
 
+    // Check if betting is open (6 PM to 8:20 AM next day)
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const isBettingOpen = hours >= 18 || hours < 8 || (hours === 8 && minutes < 20);
+
+    if (!isBettingOpen) {
+      return NextResponse.json({ error: 'Betting is closed. Cannot remove bet after 8:20 AM.' }, { status: 403 });
+    }
+
     // Find player
     const player = await prisma.player.findUnique({
       where: { name: playerName },
@@ -202,12 +212,8 @@ export async function DELETE(request: Request) {
     }
 
     // Get today's date range
-    const now = new Date();
     const startOfToday = new Date(now);
     startOfToday.setHours(0, 0, 0, 0);
-
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
 
     let searchStart: Date;
     if (hours < 8 || (hours === 8 && minutes < 20)) {
