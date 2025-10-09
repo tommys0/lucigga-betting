@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Lucka Betting - How Late Will She Be?",
-  description: "Place your bets on Lucka's punctuality!",
+  description: "Vsaď si na Lucky nedochvilnost.",
   manifest: "/manifest.json",
   themeColor: "#581c87",
   icons: {
