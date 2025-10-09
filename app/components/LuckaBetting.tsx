@@ -191,6 +191,7 @@ export default function LuckaBetting() {
    * Fetch today's bets for normal users
    * Shows only who has bet (no predictions) until results are revealed
    * Automatically refreshes every minute
+   * When results are revealed, automatically switches to results view
    */
   const fetchTodaysBetsForNormalUsers = async () => {
     setLoadingAdminData(true);
@@ -199,6 +200,34 @@ export default function LuckaBetting() {
       const data = await response.json();
       if (data.bets) {
         setTodaysBets(data.bets);
+      }
+
+      // Check if results have been revealed
+      if (data.resultsRevealed && data.bets && data.bets.length > 0) {
+        // Convert bets data to results format
+        const gameResults = data.bets.map((bet: any) => ({
+          playerName: bet.player.name,
+          prediction: bet.prediction,
+          betAmount: bet.betAmount || 0,
+          winnings: bet.winnings || 0,
+          netChange: bet.winnings || 0,
+          newPoints: bet.player.points,
+          difference: data.game?.didntCome ? 0 : Math.abs(bet.prediction - (data.game?.actualTime || 0)),
+          isWontComeBet: bet.isWontComeBet || false,
+        }));
+
+        // Sort by winnings (highest first)
+        gameResults.sort((a: any, b: any) => b.winnings - a.winnings);
+
+        // Set results and show results view
+        setResults(gameResults);
+        setShowResults(true);
+        if (data.game) {
+          setActualTime(data.game.actualTime);
+          setDidntCome(data.game.didntCome);
+        }
+        // Clear bet state since game is complete
+        setMyBet(null);
       }
     } catch (error) {
       console.error("Failed to fetch today's bets:", error);
@@ -318,6 +347,7 @@ export default function LuckaBetting() {
       const data = await response.json();
       setResults(data.results);
       setShowResults(true);
+      setMyBet(null); // Clear bet state since game is complete
       await fetchPlayers();
     } catch (error) {
       console.error("Failed to process game:", error);

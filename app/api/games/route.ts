@@ -14,20 +14,23 @@ export async function POST(request: Request) {
   try {
     const { actualTime, didntCome } = await request.json();
 
-    // Get today's date range
+    // Get today's betting session range
+    // Betting window: 6 PM to 8:20 AM next day
+    // Show bets from current session until next session starts at 6 PM
     const now = new Date();
     const startOfToday = new Date(now);
     startOfToday.setHours(0, 0, 0, 0);
 
     const hours = now.getHours();
-    const minutes = now.getMinutes();
 
     let searchStart: Date;
-    if (hours < 8 || (hours === 8 && minutes < 20)) {
+    if (hours < 18) {
+      // Before 6 PM - current session from yesterday 6 PM
       searchStart = new Date(startOfToday);
       searchStart.setDate(searchStart.getDate() - 1);
       searchStart.setHours(18, 0, 0, 0);
     } else {
+      // After 6 PM - new session from today 6 PM
       searchStart = new Date(startOfToday);
       searchStart.setHours(18, 0, 0, 0);
     }
