@@ -20,6 +20,10 @@ export const metadata: Metadata = {
   description: "Place your bets on Lucka's punctuality!",
   manifest: "/manifest.json",
   themeColor: "#581c87",
+  icons: {
+    icon: "/lucka-logo.jpg",
+    apple: "/lucka-logo.jpg",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -42,8 +46,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body
