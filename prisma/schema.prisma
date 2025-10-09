@@ -33,19 +33,21 @@ model Player {
 
 model Game {
   id         String   @id @default(cuid())
-  actualTime Int
+  actualTime Int?
+  didntCome  Boolean  @default(false)
   playedAt   DateTime @default(now())
   bets       Bet[]
 }
 
 model Bet {
-  id         String   @id @default(cuid())
-  playerId   String
-  gameId     String
-  prediction Int
-  betAmount  Int
-  winnings   Int      @default(0)
-  createdAt  DateTime @default(now())
-  game       Game     @relation(fields: [gameId], references: [id])
-  player     Player   @relation(fields: [playerId], references: [id])
+  id           String   @id @default(cuid())
+  playerId     String
+  gameId       String
+  prediction   Int
+  betAmount    Int
+  isWontComeBet Boolean @default(false)
+  winnings     Int      @default(0)
+  createdAt    DateTime @default(now())
+  game         Game     @relation(fields: [gameId], references: [id])
+  player       Player   @relation(fields: [playerId], references: [id])
 }
