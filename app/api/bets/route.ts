@@ -23,24 +23,23 @@ export async function GET(request: Request) {
       return NextResponse.json({ bet: null });
     }
 
-    // Get today's date range (from 6 PM yesterday to 8:20 AM today)
+    // Get today's betting session range
+    // Betting window: 6 PM to 8:20 AM next day
+    // Show bets from current session until next session starts at 6 PM
     const now = new Date();
     const startOfToday = new Date(now);
     startOfToday.setHours(0, 0, 0, 0);
 
-    // If it's before 8:20 AM, we're looking for yesterday 6 PM onwards
-    // If it's after 6 PM, we're looking for today 6 PM onwards
     const hours = now.getHours();
-    const minutes = now.getMinutes();
 
     let searchStart: Date;
-    if (hours < 8 || (hours === 8 && minutes < 20)) {
-      // Before 8:20 AM - look for bets from yesterday 6 PM
+    if (hours < 18) {
+      // Before 6 PM - show bets from yesterday 6 PM (current/recent betting session)
       searchStart = new Date(startOfToday);
       searchStart.setDate(searchStart.getDate() - 1);
       searchStart.setHours(18, 0, 0, 0);
     } else {
-      // After 8:20 AM - look for bets from today 6 PM
+      // After 6 PM - show bets from today 6 PM (new betting session)
       searchStart = new Date(startOfToday);
       searchStart.setHours(18, 0, 0, 0);
     }
@@ -70,6 +69,7 @@ export async function GET(request: Request) {
         playerName: player.name,
         prediction: bet.prediction,
         betAmount: bet.betAmount,
+        isWontComeBet: bet.isWontComeBet,
       },
     });
   } catch (error) {
@@ -81,7 +81,7 @@ export async function GET(request: Request) {
 // POST: Save a new bet
 export async function POST(request: Request) {
   try {
-    const { playerName, prediction, betAmount } = await request.json();
+    const { playerName, prediction, betAmount, isWontComeBet } = await request.json();
 
     // Find or create player
     let player = await prisma.player.findUnique({
@@ -94,20 +94,21 @@ export async function POST(request: Request) {
       });
     }
 
-    // Get today's date range
+    // Get today's betting session range
     const now = new Date();
     const startOfToday = new Date(now);
     startOfToday.setHours(0, 0, 0, 0);
 
     const hours = now.getHours();
-    const minutes = now.getMinutes();
 
     let searchStart: Date;
-    if (hours < 8 || (hours === 8 && minutes < 20)) {
+    if (hours < 18) {
+      // Before 6 PM - current session from yesterday 6 PM
       searchStart = new Date(startOfToday);
       searchStart.setDate(searchStart.getDate() - 1);
       searchStart.setHours(18, 0, 0, 0);
     } else {
+      // After 6 PM - new session from today 6 PM
       searchStart = new Date(startOfToday);
       searchStart.setHours(18, 0, 0, 0);
     }
@@ -144,6 +145,7 @@ export async function POST(request: Request) {
         data: {
           prediction,
           betAmount,
+          isWontComeBet: isWontComeBet || false,
         },
       });
 
@@ -153,6 +155,7 @@ export async function POST(request: Request) {
           playerName: player.name,
           prediction: updatedBet.prediction,
           betAmount: updatedBet.betAmount,
+          isWontComeBet: updatedBet.isWontComeBet,
         },
       });
     }
@@ -164,6 +167,7 @@ export async function POST(request: Request) {
         gameId: game.id,
         prediction,
         betAmount,
+        isWontComeBet: isWontComeBet || false,
         winnings: 0,
       },
     });
@@ -174,6 +178,7 @@ export async function POST(request: Request) {
         playerName: player.name,
         prediction: bet.prediction,
         betAmount: bet.betAmount,
+        isWontComeBet: bet.isWontComeBet,
       },
     });
   } catch (error) {
@@ -211,16 +216,18 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    // Get today's date range
+    // Get today's betting session range
     const startOfToday = new Date(now);
     startOfToday.setHours(0, 0, 0, 0);
 
     let searchStart: Date;
-    if (hours < 8 || (hours === 8 && minutes < 20)) {
+    if (hours < 18) {
+      // Before 6 PM - current session from yesterday 6 PM
       searchStart = new Date(startOfToday);
       searchStart.setDate(searchStart.getDate() - 1);
       searchStart.setHours(18, 0, 0, 0);
     } else {
+      // After 6 PM - new session from today 6 PM
       searchStart = new Date(startOfToday);
       searchStart.setHours(18, 0, 0, 0);
     }

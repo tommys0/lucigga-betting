@@ -12,7 +12,9 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get today's betting window (6 PM yesterday to 8:20 AM today, or 6 PM today onwards)
+    // Get today's betting session range
+    // Betting window: 6 PM to 8:20 AM next day
+    // Show bets from current session until next session starts at 6 PM
     const now = new Date();
     const startOfToday = new Date(now);
     startOfToday.setHours(0, 0, 0, 0);
@@ -21,11 +23,13 @@ export async function GET() {
     const minutes = now.getMinutes();
 
     let searchStart: Date;
-    if (hours < 8 || (hours === 8 && minutes < 20)) {
+    if (hours < 18) {
+      // Before 6 PM - show bets from yesterday 6 PM (current/recent betting session)
       searchStart = new Date(startOfToday);
       searchStart.setDate(searchStart.getDate() - 1);
       searchStart.setHours(18, 0, 0, 0);
     } else {
+      // After 6 PM - show bets from today 6 PM (new betting session)
       searchStart = new Date(startOfToday);
       searchStart.setHours(18, 0, 0, 0);
     }
