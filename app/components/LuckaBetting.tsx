@@ -1179,7 +1179,7 @@ export default function LuckaBetting() {
                             </span>
                           )}
                         </p>
-                        {!result.isWontComeBet && (
+                        {!result.isWontComeBet && !didntCome && (
                           <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm">
                             Accuracy:{" "}
                             <span className={`font-semibold ${
