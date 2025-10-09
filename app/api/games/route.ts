@@ -12,7 +12,7 @@ function calculatePoints(prediction: number, actualTime: number): number {
 
 export async function POST(request: Request) {
   try {
-    const { actualTime } = await request.json();
+    const { actualTime, didntCome } = await request.json();
 
     // Get today's date range
     const now = new Date();
@@ -44,14 +44,18 @@ export async function POST(request: Request) {
     if (!game) {
       game = await prisma.game.create({
         data: {
-          actualTime,
+          actualTime: didntCome ? null : actualTime,
+          didntCome: didntCome || false,
         },
       });
     } else {
-      // Update game with actual time
+      // Update game with actual time or didntCome status
       game = await prisma.game.update({
         where: { id: game.id },
-        data: { actualTime },
+        data: {
+          actualTime: didntCome ? null : actualTime,
+          didntCome: didntCome || false,
+        },
       });
     }
 
@@ -68,8 +72,23 @@ export async function POST(request: Request) {
     // Process each bet
     const results = await Promise.all(
       bets.map(async (bet) => {
-        // Calculate points earned (new system: 10 - minutes off)
-        const pointsEarned = calculatePoints(bet.prediction, actualTime);
+        let pointsEarned = 0;
+
+        // If she didn't come
+        if (didntCome) {
+          // Special bonus for correct "won't come" bets
+          pointsEarned = bet.isWontComeBet ? 15 : 0;
+        } else {
+          // Normal time-based prediction
+          if (bet.isWontComeBet) {
+            // They bet she won't come but she did - no points
+            pointsEarned = 0;
+          } else {
+            // Calculate points earned (new system: 10 - minutes off)
+            pointsEarned = calculatePoints(bet.prediction, actualTime!);
+          }
+        }
+
         const netChange = pointsEarned; // Always positive or zero
 
         // Update bet record with winnings
@@ -98,14 +117,16 @@ export async function POST(request: Request) {
           winnings: pointsEarned,
           netChange,
           newPoints: updatedPlayer.points,
-          difference: Math.abs(bet.prediction - actualTime),
+          difference: didntCome ? 0 : Math.abs(bet.prediction - actualTime!),
+          isWontComeBet: bet.isWontComeBet,
         };
       })
     );
 
     return NextResponse.json({
       gameId: game.id,
-      actualTime,
+      actualTime: didntCome ? null : actualTime,
+      didntCome: didntCome || false,
       results: results.sort((a, b) => (b.winnings || 0) - (a.winnings || 0)),
     });
   } catch (error) {
