@@ -35,6 +35,7 @@ model Game {
   id         String   @id @default(cuid())
   actualTime Int?
   didntCome  Boolean  @default(false)
+  gameType   String   @default("normal") // "normal" or "trip"
   playedAt   DateTime @default(now())
   bets       Bet[]
 }

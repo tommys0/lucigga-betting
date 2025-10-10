@@ -16,6 +16,7 @@ import {
   ClipboardList,
   Dices,
   Trophy,
+  Sparkles,
 } from 'lucide-react';
 
 interface DashboardData {
@@ -71,6 +72,7 @@ export default function AdminDashboard() {
     userId: '',
     password: '',
   });
+  const [creatingTripGame, setCreatingTripGame] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -179,6 +181,33 @@ export default function AdminDashboard() {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleCreateTripGame = async () => {
+    if (!confirm('Create a new trip mode game? This allows betting anytime until results are revealed.')) {
+      return;
+    }
+
+    setCreatingTripGame(true);
+    try {
+      const response = await fetch('/api/games/current', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameType: 'trip' }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert('Trip mode game created successfully! Betting is now open anytime.');
+        fetchDashboardData();
+      } else {
+        alert(data.error || 'Failed to create trip game');
+      }
+    } catch (error) {
+      alert('Failed to create trip game');
+    } finally {
+      setCreatingTripGame(false);
+    }
   };
 
   if (loading || status === 'loading') {
@@ -465,9 +494,25 @@ export default function AdminDashboard() {
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
                   <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Betting Window</p>
                   <p className="text-lg font-bold text-gray-900 dark:text-white">
-                    6 PM - 8:20 AM
+                    6 PM - 10:20 AM (Fri)<br />
+                    6 PM - 8:20 AM (Other)
                   </p>
                 </div>
+              </div>
+
+              {/* Trip Mode Button */}
+              <div className="mb-6">
+                <button
+                  onClick={handleCreateTripGame}
+                  disabled={creatingTripGame}
+                  className="w-full py-4 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Sparkles className="w-6 h-6" />
+                  <span>{creatingTripGame ? 'Creating...' : 'Create Trip Mode Game'}</span>
+                </button>
+                <p className="text-sm text-gray-600 dark:text-gray-400 text-center mt-2">
+                  Trip mode allows betting anytime until results are revealed
+                </p>
               </div>
             </div>
 
