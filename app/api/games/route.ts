@@ -35,12 +35,19 @@ export async function POST(request: Request) {
       searchStart.setHours(18, 0, 0, 0);
     }
 
-    // Find or create today's game
+    // Find today's incomplete game (game that hasn't been completed yet)
     let game = await prisma.game.findFirst({
       where: {
         playedAt: {
           gte: searchStart,
         },
+        OR: [
+          { actualTime: null },
+          { actualTime: 0 },
+        ],
+      },
+      orderBy: {
+        playedAt: 'desc',
       },
     });
 

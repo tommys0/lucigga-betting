@@ -81,7 +81,7 @@ export async function GET(request: Request) {
 // POST: Save a new bet
 export async function POST(request: Request) {
   try {
-    const { playerName, prediction, betAmount, isWontComeBet } = await request.json();
+    const { playerName, prediction, betAmount, isWontComeBet, gameType } = await request.json();
 
     // Find or create player
     let player = await prisma.player.findUnique({
@@ -114,11 +114,20 @@ export async function POST(request: Request) {
     }
 
     // Find or create today's game (with actualTime = 0 as placeholder)
+    // Look for games that haven't been completed yet (actualTime is null or 0)
+    // OR games created in the current betting session
     let game = await prisma.game.findFirst({
       where: {
         playedAt: {
           gte: searchStart,
         },
+        OR: [
+          { actualTime: null },
+          { actualTime: 0 },
+        ],
+      },
+      orderBy: {
+        playedAt: 'desc',
       },
     });
 
@@ -126,6 +135,7 @@ export async function POST(request: Request) {
       game = await prisma.game.create({
         data: {
           actualTime: 0, // Placeholder - will be updated when admin reveals
+          gameType: gameType || 'normal', // Default to 'normal' if not specified
         },
       });
     }
@@ -197,14 +207,21 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Player name is required' }, { status: 400 });
     }
 
-    // Check if betting is open (6 PM to 8:20 AM next day)
+    // Check if betting is open (6 PM to 8:20 AM next day, or 10:20 AM on Fridays)
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
-    const isBettingOpen = hours >= 18 || hours < 8 || (hours === 8 && minutes < 20);
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 5 = Friday
+
+    // On Fridays, betting closes at 10:20 AM (school starts at 10:30)
+    // On other days, betting closes at 8:20 AM (school starts at 8:30)
+    const closingHour = dayOfWeek === 5 ? 10 : 8;
+
+    const isBettingOpen = hours >= 18 || hours < closingHour || (hours === closingHour && minutes < 20);
 
     if (!isBettingOpen) {
-      return NextResponse.json({ error: 'Betting is closed. Cannot remove bet after 8:20 AM.' }, { status: 403 });
+      const closingTime = closingHour === 10 ? '10:20 AM' : '8:20 AM';
+      return NextResponse.json({ error: `Betting is closed. Cannot remove bet after ${closingTime}.` }, { status: 403 });
     }
 
     // Find player
