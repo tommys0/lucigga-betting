@@ -25,7 +25,10 @@ import {
   Hourglass,
   Gamepad2,
   Medal,
-  Award
+  Award,
+  Users,
+  Calendar,
+  Activity
 } from "lucide-react";
 
 interface Bet {
@@ -84,14 +87,34 @@ export default function LuckaBetting() {
   const [myPlayer, setMyPlayer] = useState<Player | null>(null);
   const [todaysBets, setTodaysBets] = useState<TodaysBet[]>([]);
   const [loadingAdminData, setLoadingAdminData] = useState(false);
+  const [currentGameType, setCurrentGameType] = useState<string | null>(null);
 
-  // Check if betting is open (6 PM to 8:20 AM next day)
+  // Helper function to get the closing time based on day of week
+  const getClosingTime = () => {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 5 = Friday
+    return dayOfWeek === 5 ? "10:20 AM" : "8:20 AM";
+  };
+
+  // Check if betting is open (6 PM to 8:20 AM next day, or 10:20 AM on Fridays)
+  // For trip mode, betting is always open
   const isBettingOpen = () => {
+    // If it's a trip game, betting is always open
+    if (currentGameType === 'trip') {
+      return true;
+    }
+
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
-    // Open from 6 PM (18:00) onwards OR before 8:20 AM
-    return hours >= 18 || hours < 8 || (hours === 8 && minutes < 20);
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 5 = Friday
+
+    // On Fridays, betting closes at 10:20 AM (school starts at 10:30)
+    // On other days, betting closes at 8:20 AM (school starts at 8:30)
+    const closingHour = dayOfWeek === 5 ? 10 : 8;
+
+    // Open from 6 PM (18:00) onwards OR before closing time
+    return hours >= 18 || hours < closingHour || (hours === closingHour && minutes < 20);
   };
 
   const [bettingOpen, setBettingOpen] = useState(isBettingOpen());
@@ -105,8 +128,30 @@ export default function LuckaBetting() {
     return () => clearInterval(interval);
   }, []);
 
+  const fetchCurrentGame = async () => {
+    try {
+      const response = await fetch("/api/games/current");
+      const data = await response.json();
+      if (data.game) {
+        setCurrentGameType(data.game.gameType);
+      } else {
+        setCurrentGameType(null);
+      }
+    } catch (error) {
+      console.error("Failed to fetch current game:", error);
+    }
+  };
+
   useEffect(() => {
     fetchPlayers();
+    fetchCurrentGame();
+
+    // Refresh current game every minute
+    const interval = setInterval(() => {
+      fetchCurrentGame();
+    }, 60000);
+
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -268,7 +313,7 @@ export default function LuckaBetting() {
 
     if (!bettingOpen) {
       alert(
-        "Betting is closed! You can only place bets between 6 PM and 8:20 AM.",
+        `Betting is closed! You can only place bets between 6 PM and ${getClosingTime()}.`,
       );
       return;
     }
@@ -302,7 +347,7 @@ export default function LuckaBetting() {
 
     if (!bettingOpen) {
       alert(
-        "Betting is closed! You can no longer change your bet after 8:20 AM.",
+        `Betting is closed! You can no longer change your bet after ${getClosingTime()}.`,
       );
       return;
     }
@@ -328,7 +373,7 @@ export default function LuckaBetting() {
 
   /**
    * Reveal game results and calculate points
-   * Can only be called after betting window closes (8:20 AM)
+   * Can only be called after betting window closes (8:20 AM or 10:20 AM on Fridays)
    */
   const revealResults = async () => {
     if (!didntCome && actualTime === null) {
@@ -375,15 +420,29 @@ export default function LuckaBetting() {
     fetchPlayers();
   };
 
-  const getTimeUntilBettingOpens = () => {
+  const getClosedBettingMessage = () => {
     const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 5 = Friday, 6 = Saturday
     const hours = now.getHours();
-    // Betting opens at 6 PM (18:00) and closes at 8:20 AM
-    if (hours >= 8 && hours < 18) {
-      const hoursUntil6PM = 18 - hours;
-      return `${hoursUntil6PM} hours`;
+
+    // Friday after 10:20 AM or Saturday - next betting is Sunday 6 PM for Monday
+    if ((dayOfWeek === 5 && hours >= 10) || dayOfWeek === 6) {
+      return "Come back Monday! Bet between 6 PM Sunday and 8:20 AM Monday";
     }
-    return "Soon";
+
+    // Sunday before 6 PM - betting opens today
+    if (dayOfWeek === 0 && hours < 18) {
+      const hoursUntil = 18 - hours;
+      return `Opens at 6 PM today (in ${hoursUntil} hours)`;
+    }
+
+    // Other days - betting opens at 6 PM
+    if (hours >= 8 && hours < 18) {
+      const hoursUntil = 18 - hours;
+      return `Opens at 6 PM (in ${hoursUntil} hours)`;
+    }
+
+    return "Opens at 6 PM";
   };
 
   return (
@@ -438,6 +497,34 @@ export default function LuckaBetting() {
                     )}
                   </button>
                   <button
+                    onClick={() => router.push('/players')}
+                    className="w-10 h-10 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center transition-colors"
+                    title="View All Players"
+                  >
+                    <Users className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                  </button>
+                  <button
+                    onClick={() => router.push('/stats')}
+                    className="w-10 h-10 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center transition-colors"
+                    title="View Statistics"
+                  >
+                    <BarChart3 className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                  </button>
+                  <button
+                    onClick={() => router.push('/history')}
+                    className="w-10 h-10 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center transition-colors"
+                    title="View Game History"
+                  >
+                    <Calendar className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                  </button>
+                  <button
+                    onClick={() => router.push('/global-stats')}
+                    className="w-10 h-10 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center transition-colors"
+                    title="View Global Statistics"
+                  >
+                    <Activity className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                  </button>
+                  <button
                     onClick={toggleTheme}
                     className="w-10 h-10 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center transition-colors"
                     title="Toggle theme"
@@ -471,12 +558,21 @@ export default function LuckaBetting() {
 
           {/* Betting Status Banner */}
           <div className="mb-4">
-            {bettingOpen ? (
+            {currentGameType === 'trip' ? (
+              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-2xl p-4 border border-purple-200 dark:border-purple-800 shadow-sm">
+                <div className="flex items-center justify-center gap-2 md:gap-3">
+                  <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-purple-500" />
+                  <p className="text-purple-700 dark:text-purple-400 text-base md:text-lg font-semibold md:font-bold text-center">
+                    TRIP MODE - Betting is OPEN anytime!
+                  </p>
+                </div>
+              </div>
+            ) : bettingOpen ? (
               <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-4 border border-green-200 dark:border-green-800 shadow-sm">
                 <div className="flex items-center justify-center gap-2 md:gap-3">
                   <Circle className="w-6 h-6 md:w-8 md:h-8 fill-green-500 text-green-500" />
                   <p className="text-green-700 dark:text-green-400 text-base md:text-lg font-semibold md:font-bold text-center">
-                    Betting is OPEN until 8:20 AM
+                    Betting is OPEN until {getClosingTime()}
                   </p>
                 </div>
               </div>
@@ -489,8 +585,8 @@ export default function LuckaBetting() {
                       Betting is CLOSED
                     </p>
                   </div>
-                  <p className="text-red-600 dark:text-red-500 text-sm">
-                    Opens at 6 PM (in {getTimeUntilBettingOpens()})
+                  <p className="text-red-600 dark:text-red-500 text-sm text-center">
+                    {getClosedBettingMessage()}
                   </p>
                 </div>
               </div>
@@ -832,7 +928,7 @@ export default function LuckaBetting() {
                     <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-center">
                       <p className="text-red-700 dark:text-red-400 text-sm flex items-center justify-center gap-2">
                         <Lock className="w-4 h-4" />
-                        <span>Betting closed! Come back between 6 PM and 8:20 AM.</span>
+                        <span>Betting closed! Come back between 6 PM and {getClosingTime()}.</span>
                       </p>
                     </div>
                   )}
@@ -1003,7 +1099,7 @@ export default function LuckaBetting() {
                       <p className="text-yellow-700 dark:text-yellow-400 text-sm flex items-center justify-center gap-2">
                         <Hourglass className="w-4 h-4" />
                         <span>
-                          Results can only be revealed after betting closes (8:20 AM)
+                          Results can only be revealed after betting closes ({getClosingTime()})
                         </span>
                       </p>
                     </div>
@@ -1100,7 +1196,7 @@ export default function LuckaBetting() {
                       {bettingOpen ? (
                         <>
                           <Hourglass className="w-4 h-4" />
-                          <span>Results will be revealed after betting closes at 8:20 AM</span>
+                          <span>Results will be revealed after betting closes at {getClosingTime()}</span>
                         </>
                       ) : (
                         <>
