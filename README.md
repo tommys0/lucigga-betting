@@ -8,8 +8,8 @@ A fun multiplayer betting app where classmates can bet on how late Lucka will ar
 - Place bets on arrival time (minutes early/late)
 - "Won't come" special bets for bonus points
 - Smart betting windows:
-  - Normal days: 6 PM - 8:20 AM
-  - Fridays: 6 PM - 10:20 AM (school starts at 10:30)
+  - Normal days: 6 PM - 8:25 AM
+  - Tuesdays & Fridays: 6 PM - 10:25 AM (school starts at 10:30)
 - **Trip Mode**: Flexible betting for school trips (open 24/7)
 
 ### 🏆 **Persistent Points System**
@@ -132,7 +132,7 @@ Open [http://localhost:3000](http://localhost:3000)
    - Change your bet anytime before betting closes
 3. **Betting Hours**:
    - Opens: 6 PM daily
-   - Closes: 8:20 AM (10:20 AM on Fridays)
+   - Closes: 8:25 AM (10:25 AM on Tuesdays/Fridays)
    - Trip Mode: Open 24/7 during school trips
 4. **View Results**:
    - Results automatically appear after admin reveals them
@@ -303,7 +303,7 @@ See `DEPLOYMENT.md` for detailed instructions on deploying to Vercel with a home
 - ✅ Distribution charts for predictions vs reality
 - ✅ Most accurate player tracking
 - ✅ Monthly performance breakdown
-- ✅ Friday special hours (10:20 AM closing)
+- ✅ Tuesday & Friday special hours (10:25 AM closing)
 - ✅ "Won't come" special bets
 - ✅ Fixed duplicate game creation bug
 

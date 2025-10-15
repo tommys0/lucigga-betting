@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     }
 
     // Get today's betting session range
-    // Betting window: 6 PM to 8:20 AM next day
+    // Betting window: 6 PM to 8:25 AM next day (10:25 AM on Fridays)
     // Show bets from current session until next session starts at 6 PM
     const now = new Date();
     const startOfToday = new Date(now);
@@ -207,20 +207,20 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Player name is required' }, { status: 400 });
     }
 
-    // Check if betting is open (6 PM to 8:20 AM next day, or 10:20 AM on Fridays)
+    // Check if betting is open (6 PM to 8:25 AM next day, or 10:25 AM on Tuesdays/Fridays)
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
-    const dayOfWeek = now.getDay(); // 0 = Sunday, 5 = Friday
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 2 = Tuesday, 5 = Friday
 
-    // On Fridays, betting closes at 10:20 AM (school starts at 10:30)
-    // On other days, betting closes at 8:20 AM (school starts at 8:30)
-    const closingHour = dayOfWeek === 5 ? 10 : 8;
+    // On Tuesdays and Fridays, betting closes at 10:25 AM (school starts at 10:30)
+    // On other days, betting closes at 8:25 AM (school starts at 8:30)
+    const closingHour = (dayOfWeek === 2 || dayOfWeek === 5) ? 10 : 8;
 
-    const isBettingOpen = hours >= 18 || hours < closingHour || (hours === closingHour && minutes < 20);
+    const isBettingOpen = hours >= 18 || hours < closingHour || (hours === closingHour && minutes < 25);
 
     if (!isBettingOpen) {
-      const closingTime = closingHour === 10 ? '10:20 AM' : '8:20 AM';
+      const closingTime = closingHour === 10 ? '10:25 AM' : '8:25 AM';
       return NextResponse.json({ error: `Betting is closed. Cannot remove bet after ${closingTime}.` }, { status: 403 });
     }
 

@@ -92,11 +92,11 @@ export default function LuckaBetting() {
   // Helper function to get the closing time based on day of week
   const getClosingTime = () => {
     const now = new Date();
-    const dayOfWeek = now.getDay(); // 0 = Sunday, 5 = Friday
-    return dayOfWeek === 5 ? "10:20 AM" : "8:20 AM";
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 2 = Tuesday, 5 = Friday
+    return (dayOfWeek === 2 || dayOfWeek === 5) ? "10:25 AM" : "8:25 AM";
   };
 
-  // Check if betting is open (6 PM to 8:20 AM next day, or 10:20 AM on Fridays)
+  // Check if betting is open (6 PM to 8:25 AM next day, or 10:25 AM on Tuesdays/Fridays)
   // For trip mode, betting is always open
   const isBettingOpen = () => {
     // If it's a trip game, betting is always open
@@ -107,14 +107,14 @@ export default function LuckaBetting() {
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
-    const dayOfWeek = now.getDay(); // 0 = Sunday, 5 = Friday
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 2 = Tuesday, 5 = Friday
 
-    // On Fridays, betting closes at 10:20 AM (school starts at 10:30)
-    // On other days, betting closes at 8:20 AM (school starts at 8:30)
-    const closingHour = dayOfWeek === 5 ? 10 : 8;
+    // On Tuesdays and Fridays, betting closes at 10:25 AM (school starts at 10:30)
+    // On other days, betting closes at 8:25 AM (school starts at 8:30)
+    const closingHour = (dayOfWeek === 2 || dayOfWeek === 5) ? 10 : 8;
 
     // Open from 6 PM (18:00) onwards OR before closing time
-    return hours >= 18 || hours < closingHour || (hours === closingHour && minutes < 20);
+    return hours >= 18 || hours < closingHour || (hours === closingHour && minutes < 25);
   };
 
   const [bettingOpen, setBettingOpen] = useState(isBettingOpen());
@@ -373,7 +373,7 @@ export default function LuckaBetting() {
 
   /**
    * Reveal game results and calculate points
-   * Can only be called after betting window closes (8:20 AM or 10:20 AM on Fridays)
+   * Can only be called after betting window closes (8:25 AM or 10:25 AM on Tuesdays/Fridays)
    */
   const revealResults = async () => {
     if (!didntCome && actualTime === null) {
@@ -425,9 +425,9 @@ export default function LuckaBetting() {
     const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 5 = Friday, 6 = Saturday
     const hours = now.getHours();
 
-    // Friday after 10:20 AM or Saturday - next betting is Sunday 6 PM for Monday
+    // Friday after 10:25 AM or Saturday - next betting is Sunday 6 PM for Monday
     if ((dayOfWeek === 5 && hours >= 10) || dayOfWeek === 6) {
-      return "Come back Monday! Bet between 6 PM Sunday and 8:20 AM Monday";
+      return "Come back Monday! Bet between 6 PM Sunday and 10:25 AM Tuesday";
     }
 
     // Sunday before 6 PM - betting opens today

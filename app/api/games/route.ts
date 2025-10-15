@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     const { actualTime, didntCome } = await request.json();
 
     // Get today's betting session range
-    // Betting window: 6 PM to 8:20 AM next day
+    // Betting window: 6 PM to 8:25 AM next day (10:25 AM on Tuesdays/Fridays)
     // Show bets from current session until next session starts at 6 PM
     const now = new Date();
     const startOfToday = new Date(now);

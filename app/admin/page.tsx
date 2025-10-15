@@ -494,8 +494,8 @@ export default function AdminDashboard() {
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
                   <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Betting Window</p>
                   <p className="text-lg font-bold text-gray-900 dark:text-white">
-                    6 PM - 10:20 AM (Fri)<br />
-                    6 PM - 8:20 AM (Other)
+                    6 PM - 10:25 AM (Tue/Fri)<br />
+                    6 PM - 8:25 AM (Other)
                   </p>
                 </div>
               </div>
