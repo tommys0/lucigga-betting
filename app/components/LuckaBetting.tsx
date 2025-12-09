@@ -28,7 +28,7 @@ import {
   Award,
   Users,
   Calendar,
-  Activity
+  Activity,
 } from "lucide-react";
 
 interface Bet {
@@ -92,29 +92,33 @@ export default function LuckaBetting() {
   // Helper function to get the closing time based on day of week
   const getClosingTime = () => {
     const now = new Date();
-    const dayOfWeek = now.getDay(); // 0 = Sunday, 2 = Tuesday, 5 = Friday
-    return (dayOfWeek === 2 || dayOfWeek === 5) ? "10:25 AM" : "8:25 AM";
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 5 = Friday
+    return dayOfWeek === 5 ? "10:25 AM" : "8:25 AM";
   };
 
-  // Check if betting is open (6 PM to 8:25 AM next day, or 10:25 AM on Tuesdays/Fridays)
+  // Check if betting is open (6 PM to 8:20 AM next day, or 10:20 AM on Fridays)
   // For trip mode, betting is always open
   const isBettingOpen = () => {
     // If it's a trip game, betting is always open
-    if (currentGameType === 'trip') {
+    if (currentGameType === "trip") {
       return true;
     }
 
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
-    const dayOfWeek = now.getDay(); // 0 = Sunday, 2 = Tuesday, 5 = Friday
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 5 = Friday
 
-    // On Tuesdays and Fridays, betting closes at 10:25 AM (school starts at 10:30)
-    // On other days, betting closes at 8:25 AM (school starts at 8:30)
-    const closingHour = (dayOfWeek === 2 || dayOfWeek === 5) ? 10 : 8;
+    // On Fridays, betting closes at 10:20 AM (school starts at 10:30)
+    // On other days, betting closes at 8:20 AM (school starts at 8:30)
+    const closingHour = dayOfWeek === 5 ? 10 : 8;
 
     // Open from 6 PM (18:00) onwards OR before closing time
-    return hours >= 18 || hours < closingHour || (hours === closingHour && minutes < 25);
+    return (
+      hours >= 18 ||
+      hours < closingHour ||
+      (hours === closingHour && minutes < 20)
+    );
   };
 
   const [bettingOpen, setBettingOpen] = useState(isBettingOpen());
@@ -248,7 +252,7 @@ export default function LuckaBetting() {
       }
 
       // Check if results have been revealed
-      if (data.resultsRevealed && data.bets && data.bets.length > 0) {
+      if (data.resultsRevealed && data.bets && data.bets.length > 0 && data.game) {
         // Convert bets data to results format
         const gameResults = data.bets.map((bet: any) => ({
           playerName: bet.player.name,
@@ -257,14 +261,16 @@ export default function LuckaBetting() {
           winnings: bet.winnings || 0,
           netChange: bet.winnings || 0,
           newPoints: bet.player.points,
-          difference: data.game?.didntCome ? 0 : Math.abs(bet.prediction - (data.game?.actualTime || 0)),
+          difference: data.game?.didntCome
+            ? 0
+            : Math.abs(bet.prediction - (data.game?.actualTime || 0)),
           isWontComeBet: bet.isWontComeBet || false,
         }));
 
         // Sort by winnings (highest first)
         gameResults.sort((a: any, b: any) => b.winnings - a.winnings);
 
-        // Set results and show results view
+        // Set results
         setResults(gameResults);
         setShowResults(true);
         if (data.game) {
@@ -273,6 +279,10 @@ export default function LuckaBetting() {
         }
         // Clear bet state since game is complete
         setMyBet(null);
+      } else {
+        // No results yet, hide results view
+        setShowResults(false);
+        setResults([]);
       }
     } catch (error) {
       console.error("Failed to fetch today's bets:", error);
@@ -293,7 +303,9 @@ export default function LuckaBetting() {
 
   const fetchTodaysBet = async (playerName: string) => {
     try {
-      const response = await fetch(`/api/bets?playerName=${encodeURIComponent(playerName)}`);
+      const response = await fetch(
+        `/api/bets?playerName=${encodeURIComponent(playerName)}`,
+      );
       const data = await response.json();
       if (data.bet) {
         setMyBet(data.bet);
@@ -353,9 +365,12 @@ export default function LuckaBetting() {
     }
 
     try {
-      const response = await fetch(`/api/bets?playerName=${encodeURIComponent(myPlayer.name)}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/bets?playerName=${encodeURIComponent(myPlayer.name)}`,
+        {
+          method: "DELETE",
+        },
+      );
 
       const data = await response.json();
       if (data.success) {
@@ -373,7 +388,7 @@ export default function LuckaBetting() {
 
   /**
    * Reveal game results and calculate points
-   * Can only be called after betting window closes (8:25 AM or 10:25 AM on Tuesdays/Fridays)
+   * Can only be called after betting window closes (8:20 AM or 10:20 AM on Fridays)
    */
   const revealResults = async () => {
     if (!didntCome && actualTime === null) {
@@ -425,9 +440,9 @@ export default function LuckaBetting() {
     const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 5 = Friday, 6 = Saturday
     const hours = now.getHours();
 
-    // Friday after 10:25 AM or Saturday - next betting is Sunday 6 PM for Monday
+    // Friday after 10:20 AM or Saturday - next betting is Sunday 6 PM for Monday
     if ((dayOfWeek === 5 && hours >= 10) || dayOfWeek === 6) {
-      return "Come back Monday! Bet between 6 PM Sunday and 10:25 AM Tuesday";
+      return "Come back Monday! Bet between 6 PM Sunday and 8:20 AM Monday";
     }
 
     // Sunday before 6 PM - betting opens today
@@ -497,28 +512,28 @@ export default function LuckaBetting() {
                     )}
                   </button>
                   <button
-                    onClick={() => router.push('/players')}
+                    onClick={() => router.push("/players")}
                     className="w-10 h-10 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center transition-colors"
                     title="View All Players"
                   >
                     <Users className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                   </button>
                   <button
-                    onClick={() => router.push('/stats')}
+                    onClick={() => router.push("/stats")}
                     className="w-10 h-10 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center transition-colors"
                     title="View Statistics"
                   >
                     <BarChart3 className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                   </button>
                   <button
-                    onClick={() => router.push('/history')}
+                    onClick={() => router.push("/history")}
                     className="w-10 h-10 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center transition-colors"
                     title="View Game History"
                   >
                     <Calendar className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                   </button>
                   <button
-                    onClick={() => router.push('/global-stats')}
+                    onClick={() => router.push("/global-stats")}
                     className="w-10 h-10 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center transition-colors"
                     title="View Global Statistics"
                   >
@@ -558,7 +573,7 @@ export default function LuckaBetting() {
 
           {/* Betting Status Banner */}
           <div className="mb-4">
-            {currentGameType === 'trip' ? (
+            {currentGameType === "trip" ? (
               <div className="bg-purple-50 dark:bg-purple-900/20 rounded-2xl p-4 border border-purple-200 dark:border-purple-800 shadow-sm">
                 <div className="flex items-center justify-center gap-2 md:gap-3">
                   <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-purple-500" />
@@ -728,10 +743,9 @@ export default function LuckaBetting() {
           </div>
         )}
 
-        {!showResults ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-            {/* Left side - Place your bet */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 md:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+          {/* Left side - Place your bet OR Your Result */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 md:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
               <div className="mb-5 md:mb-6">
                 <div className="flex items-center gap-2 md:gap-3 mb-3">
                   <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-600 dark:bg-blue-500 rounded-xl flex items-center justify-center">
@@ -745,14 +759,132 @@ export default function LuckaBetting() {
                   <p className="text-blue-700 dark:text-blue-300 text-xs md:text-sm flex items-start gap-2">
                     <BarChart3 className="w-4 h-4 mt-0.5 flex-shrink-0" />
                     <span>
-                      <span className="font-bold">Point System:</span> Earn up to 10 points per round!
-                      <span className="block mt-1">Formula: <span className="font-mono font-bold">10 - minutes off</span></span>
+                      <span className="font-bold">Point System:</span> Earn up
+                      to 10 points per round!
+                      <span className="block mt-1">
+                        Formula:{" "}
+                        <span className="font-mono font-bold">
+                          10 - minutes off
+                        </span>
+                      </span>
                     </span>
                   </p>
                 </div>
               </div>
 
-              {session?.user?.role === "admin" ? (
+              {showResults && results.length > 0 ? (
+                // Show user's personal result when results are revealed
+                (() => {
+                  const myResult = results.find(r => r.playerName === (myPlayer?.name || session?.user?.name));
+                  return myResult ? (
+                    <div className="space-y-4">
+                      {/* Actual Result Banner */}
+                      <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4 text-center">
+                        <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">
+                          {didntCome ? "She didn't come!" : "Lucka arrived"}
+                        </p>
+                        <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                          {didntCome ? "Didn't Come" : formatTime(actualTime!)}
+                        </p>
+                      </div>
+
+                      {/* Your Result Card */}
+                      <div className={`rounded-xl p-5 ${
+                        myResult.netChange > 0
+                          ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
+                          : "bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600"
+                      }`}>
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            myResult.netChange > 0
+                              ? "bg-green-200 dark:bg-green-800"
+                              : "bg-gray-200 dark:bg-gray-600"
+                          }`}>
+                            {myResult.netChange > 0 ? (
+                              <Award className="w-6 h-6 text-green-700 dark:text-green-300" />
+                            ) : (
+                              <BarChart3 className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                            )}
+                          </div>
+                          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Your Result</h3>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600 dark:text-gray-400 text-sm">Your Prediction</span>
+                            {myResult.isWontComeBet ? (
+                              <span className="text-purple-600 dark:text-purple-400 font-bold flex items-center gap-1">
+                                <Sparkles className="w-4 h-4" />
+                                Won't Come
+                              </span>
+                            ) : (
+                              <span className="text-gray-900 dark:text-white font-bold">
+                                {formatTime(myResult.prediction)}
+                              </span>
+                            )}
+                          </div>
+
+                          {!myResult.isWontComeBet && !didntCome && (
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-600 dark:text-gray-400 text-sm">Accuracy</span>
+                              <span className={`font-bold ${
+                                myResult.difference === 0
+                                  ? "text-green-600 dark:text-green-400"
+                                  : myResult.difference <= 2
+                                    ? "text-blue-600 dark:text-blue-400"
+                                    : myResult.difference <= 5
+                                      ? "text-orange-600 dark:text-orange-400"
+                                      : "text-gray-600 dark:text-gray-400"
+                              }`}>
+                                {myResult.difference === 0
+                                  ? "Perfect!"
+                                  : `Off by ${Math.abs(myResult.difference)} min`}
+                              </span>
+                            </div>
+                          )}
+
+                          <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-gray-600 dark:text-gray-400 text-sm">Points Earned</span>
+                              <span className={`text-3xl font-bold ${
+                                myResult.netChange > 0
+                                  ? "text-green-600 dark:text-green-400"
+                                  : "text-gray-600 dark:text-gray-400"
+                              }`}>
+                                +{myResult.netChange}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-600 dark:text-gray-400 text-sm">New Total</span>
+                              <div className="inline-flex items-center gap-2 bg-white dark:bg-gray-700 rounded-lg px-3 py-1 border border-gray-200 dark:border-gray-600">
+                                <span className="text-blue-600 dark:text-blue-400 text-lg font-bold">
+                                  {myResult.newPoints}
+                                </span>
+                                <span className="text-gray-600 dark:text-gray-400 text-xs">
+                                  pts
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* New Game hint */}
+                      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3 text-center">
+                        <p className="text-blue-700 dark:text-blue-300 text-xs">
+                          Check the leaderboard and all results on the right →
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <p className="text-gray-600 dark:text-gray-400">
+                        You didn't place a bet for this round
+                      </p>
+                    </div>
+                  );
+                })()
+              ) : session?.user?.role === "admin" ? (
                 // Admin Overview - Replaces betting form for admin users
                 // Shows real-time betting session data instead of loading state
                 <div className="space-y-4">
@@ -764,7 +896,8 @@ export default function LuckaBetting() {
                       </h3>
                     </div>
                     <p className="text-purple-600 dark:text-purple-300 text-sm">
-                      You're viewing as admin. Check today's betting session below.
+                      You're viewing as admin. Check today's betting session
+                      below.
                     </p>
                   </div>
 
@@ -821,7 +954,9 @@ export default function LuckaBetting() {
                                     {bet.player.name}
                                   </p>
                                   <p className="text-gray-600 dark:text-gray-400 text-xs">
-                                    {new Date(bet.createdAt).toLocaleTimeString()}
+                                    {new Date(
+                                      bet.createdAt,
+                                    ).toLocaleTimeString()}
                                   </p>
                                 </div>
                                 <div className="text-right">
@@ -891,9 +1026,20 @@ export default function LuckaBetting() {
                       <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
                         <p className="text-gray-600 dark:text-gray-400 text-xs text-center">
                           {myBet.isWontComeBet ? (
-                            <span>You'll earn <span className="font-bold text-purple-600 dark:text-purple-400">+15 points</span> if she doesn't come!</span>
+                            <span>
+                              You'll earn{" "}
+                              <span className="font-bold text-purple-600 dark:text-purple-400">
+                                +15 points
+                              </span>{" "}
+                              if she doesn't come!
+                            </span>
                           ) : (
-                            <span>You'll earn points based on accuracy: <span className="font-mono font-bold text-gray-900 dark:text-white">10 - minutes off</span></span>
+                            <span>
+                              You'll earn points based on accuracy:{" "}
+                              <span className="font-mono font-bold text-gray-900 dark:text-white">
+                                10 - minutes off
+                              </span>
+                            </span>
                           )}
                         </p>
                       </div>
@@ -928,7 +1074,10 @@ export default function LuckaBetting() {
                     <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-center">
                       <p className="text-red-700 dark:text-red-400 text-sm flex items-center justify-center gap-2">
                         <Lock className="w-4 h-4" />
-                        <span>Betting closed! Come back between 6 PM and {getClosingTime()}.</span>
+                        <span>
+                          Betting closed! Come back between 6 PM and{" "}
+                          {getClosingTime()}.
+                        </span>
                       </p>
                     </div>
                   )}
@@ -991,20 +1140,36 @@ export default function LuckaBetting() {
                           </p>
                           <div className="flex items-center justify-center gap-4">
                             <div>
-                              <p className="text-xs text-gray-600 dark:text-gray-400">Exact</p>
-                              <p className="text-xl font-bold text-green-600 dark:text-green-400">+10</p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">
+                                Exact
+                              </p>
+                              <p className="text-xl font-bold text-green-600 dark:text-green-400">
+                                +10
+                              </p>
                             </div>
                             <div>
-                              <p className="text-xs text-gray-600 dark:text-gray-400">±1 min</p>
-                              <p className="text-xl font-bold text-blue-600 dark:text-blue-400">+9</p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">
+                                ±1 min
+                              </p>
+                              <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                                +9
+                              </p>
                             </div>
                             <div>
-                              <p className="text-xs text-gray-600 dark:text-gray-400">±5 min</p>
-                              <p className="text-lg font-bold text-orange-600 dark:text-orange-400">+5</p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">
+                                ±5 min
+                              </p>
+                              <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                                +5
+                              </p>
                             </div>
                             <div>
-                              <p className="text-xs text-gray-600 dark:text-gray-400">±10 min</p>
-                              <p className="text-base font-bold text-gray-600 dark:text-gray-400">+0</p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">
+                                ±10 min
+                              </p>
+                              <p className="text-base font-bold text-gray-600 dark:text-gray-400">
+                                +0
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -1018,24 +1183,132 @@ export default function LuckaBetting() {
                     className="w-full py-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-gray-400 dark:disabled:bg-gray-600 text-white font-bold rounded-xl text-lg md:text-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 md:gap-3 shadow-lg min-h-[56px]"
                   >
                     <Target className="w-6 h-6 md:w-7 md:h-7" />
-                    <span>{isWontComeBet ? "Place 'Won't Come' Bet" : "Place Bet"}</span>
+                    <span>
+                      {isWontComeBet ? "Place 'Won't Come' Bet" : "Place Bet"}
+                    </span>
                   </button>
                 </div>
               )}
             </div>
 
-            {/* Right side - Admin reveal results */}
+            {/* Right side - All Results OR Admin reveal results */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 md:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
               <div className="flex items-center gap-2 md:gap-3 mb-5 md:mb-6">
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-orange-600 dark:bg-orange-500 rounded-xl flex items-center justify-center">
                   <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-white" />
                 </div>
                 <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
-                  Reveal Results
+                  {showResults ? "All Results" : "Reveal Results"}
                 </h2>
               </div>
 
-              {session?.user?.role === "admin" ? (
+              {showResults && results.length > 0 ? (
+                // Show all results when revealed
+                <div className="space-y-4">
+                  {/* Actual Result Banner */}
+                  <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4 text-center">
+                    <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">
+                      {didntCome ? "She didn't come!" : "Lucka arrived"}
+                    </p>
+                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                      {didntCome ? "Didn't Come" : formatTime(actualTime!)}
+                    </p>
+                    {results.length > 0 && results[0]?.winnings > 0 && (
+                      <p className="text-sm mt-2 text-gray-600 dark:text-gray-400">
+                        <span className="font-bold text-green-600 dark:text-green-400">{results[0].playerName}</span> was closest!
+                      </p>
+                    )}
+                  </div>
+
+                  {/* All Results List */}
+                  <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                    {results.map((result, index) => (
+                      <div
+                        key={index}
+                        className={`rounded-xl p-4 ${
+                          result.netChange > 0
+                            ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
+                            : "bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                result.netChange > 0
+                                  ? "bg-green-200 dark:bg-green-800"
+                                  : "bg-gray-200 dark:bg-gray-600"
+                              }`}>
+                                {result.netChange > 0 ? (
+                                  <Award className="w-5 h-5 text-green-700 dark:text-green-300" />
+                                ) : (
+                                  <BarChart3 className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                                )}
+                              </div>
+                              <p className="text-gray-900 dark:text-white font-bold truncate">{result.playerName}</p>
+                            </div>
+                            <div className="ml-10 space-y-1">
+                              <p className="text-gray-600 dark:text-gray-400 text-xs">
+                                Predicted:{" "}
+                                {result.isWontComeBet ? (
+                                  <span className="font-semibold text-purple-600 dark:text-purple-400">Won't Come</span>
+                                ) : (
+                                  <span className="font-semibold text-gray-900 dark:text-white">
+                                    {formatTime(result.prediction)}
+                                  </span>
+                                )}
+                              </p>
+                              {!result.isWontComeBet && !didntCome && (
+                                <p className="text-gray-600 dark:text-gray-400 text-xs">
+                                  Accuracy:{" "}
+                                  <span className={`font-semibold ${
+                                    result.difference === 0
+                                      ? "text-green-600 dark:text-green-400"
+                                      : result.difference <= 2
+                                        ? "text-blue-600 dark:text-blue-400"
+                                        : result.difference <= 5
+                                          ? "text-orange-600 dark:text-orange-400"
+                                          : "text-gray-600 dark:text-gray-400"
+                                  }`}>
+                                    {result.difference === 0 ? "Perfect!" : `Off by ${Math.abs(result.difference)} min`}
+                                  </span>
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <p className={`text-2xl font-bold ${
+                              result.netChange > 0
+                                ? "text-green-600 dark:text-green-400"
+                                : "text-gray-600 dark:text-gray-400"
+                            }`}>
+                              +{result.netChange}
+                            </p>
+                            <p className="text-gray-600 dark:text-gray-400 text-xs">pts</p>
+                            <div className="mt-1 inline-flex items-center gap-1 bg-white dark:bg-gray-700 rounded px-2 py-0.5 border border-gray-200 dark:border-gray-600">
+                              <span className="text-blue-600 dark:text-blue-400 text-sm font-bold">
+                                {result.newPoints}
+                              </span>
+                              <span className="text-gray-600 dark:text-gray-400 text-xs">total</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* New Game Button */}
+                  {session?.user?.role !== "admin" && (
+                    <button
+                      onClick={resetGame}
+                      className="w-full py-3 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md"
+                    >
+                      <RefreshCw className="w-5 h-5" />
+                      <span>New Game</span>
+                    </button>
+                  )}
+                </div>
+              ) : session?.user?.role === "admin" ? (
                 <div className="space-y-6">
                   <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 text-center">
                     <p className="text-yellow-700 dark:text-yellow-400 text-sm flex items-center justify-center gap-2">
@@ -1071,25 +1344,25 @@ export default function LuckaBetting() {
                       <label className="block text-gray-900 dark:text-white mb-3 font-semibold text-sm md:text-base">
                         Actual Arrival Time
                       </label>
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 md:p-5">
-                      <input
-                        type="range"
-                        min="-30"
-                        max="120"
-                        value={actualTime ?? 0}
-                        onChange={(e) =>
-                          setActualTime(parseInt(e.target.value))
-                        }
-                        className="w-full h-2 md:h-3 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-orange-600"
-                      />
-                      <div className="mt-4 md:mt-5 text-center">
-                        <p className="text-3xl md:text-4xl font-bold text-orange-600 dark:text-orange-400">
-                          {actualTime !== null
-                            ? formatTime(actualTime)
-                            : "Not set"}
-                        </p>
+                      <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 md:p-5">
+                        <input
+                          type="range"
+                          min="-30"
+                          max="120"
+                          value={actualTime ?? 0}
+                          onChange={(e) =>
+                            setActualTime(parseInt(e.target.value))
+                          }
+                          className="w-full h-2 md:h-3 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-orange-600"
+                        />
+                        <div className="mt-4 md:mt-5 text-center">
+                          <p className="text-3xl md:text-4xl font-bold text-orange-600 dark:text-orange-400">
+                            {actualTime !== null
+                              ? formatTime(actualTime)
+                              : "Not set"}
+                          </p>
+                        </div>
                       </div>
-                    </div>
                     </div>
                   )}
 
@@ -1099,7 +1372,8 @@ export default function LuckaBetting() {
                       <p className="text-yellow-700 dark:text-yellow-400 text-sm flex items-center justify-center gap-2">
                         <Hourglass className="w-4 h-4" />
                         <span>
-                          Results can only be revealed after betting closes ({getClosingTime()})
+                          Results can only be revealed after betting closes (
+                          {getClosingTime()})
                         </span>
                       </p>
                     </div>
@@ -1173,7 +1447,8 @@ export default function LuckaBetting() {
                               </p>
                               {bet.createdAt && (
                                 <p className="text-gray-600 dark:text-gray-400 text-xs">
-                                  Bet placed at {new Date(bet.createdAt).toLocaleTimeString()}
+                                  Bet placed at{" "}
+                                  {new Date(bet.createdAt).toLocaleTimeString()}
                                 </p>
                               )}
                             </div>
@@ -1196,7 +1471,10 @@ export default function LuckaBetting() {
                       {bettingOpen ? (
                         <>
                           <Hourglass className="w-4 h-4" />
-                          <span>Results will be revealed after betting closes at {getClosingTime()}</span>
+                          <span>
+                            Results will be revealed after betting closes at{" "}
+                            {getClosingTime()}
+                          </span>
                         </>
                       ) : (
                         <>
@@ -1210,133 +1488,6 @@ export default function LuckaBetting() {
               )}
             </div>
           </div>
-        ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 md:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-            <div className="text-center mb-6 md:mb-8">
-              <div className="inline-flex items-center gap-2 md:gap-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-2xl px-5 md:px-6 py-3 md:py-4 mb-4">
-                <Sparkles className="w-8 h-8 md:w-10 md:h-10 text-purple-600 dark:text-purple-400" />
-                <div className="text-left">
-                  <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm">
-                    {results[0]?.isWontComeBet && results[0]?.winnings > 0 ? "She didn't come!" : "Lucka arrived"}
-                  </p>
-                  <p className="text-2xl md:text-3xl font-bold text-purple-600 dark:text-purple-400">
-                    {results[0]?.isWontComeBet && results[0]?.winnings > 0 ? "Didn't Come" : formatTime(actualTime!)}
-                  </p>
-                </div>
-              </div>
-              {results.length > 0 && results[0]?.winnings > 0 && (
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  <span className="font-bold text-green-600 dark:text-green-400">{results[0].playerName}</span> was closest!
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-3 md:space-y-4 mb-6 md:mb-8">
-              {results.map((result, index) => (
-                <div
-                  key={index}
-                  className={`rounded-xl md:rounded-2xl p-4 md:p-5 transition-colors ${
-                    result.netChange > 0
-                      ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
-                      : "bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600"
-                  }`}
-                >
-                  <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 md:gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
-                        <div
-                          className={`w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center ${
-                            result.netChange > 0
-                              ? "bg-green-200 dark:bg-green-800"
-                              : "bg-gray-200 dark:bg-gray-600"
-                          }`}
-                        >
-                          {result.netChange > 0 ? (
-                            <Award className="w-5 h-5 md:w-6 md:h-6 text-green-700 dark:text-green-300" />
-                          ) : (
-                            <BarChart3 className="w-5 h-5 md:w-6 md:h-6 text-gray-600 dark:text-gray-400" />
-                          )}
-                        </div>
-                        <p className="text-gray-900 dark:text-white font-bold text-lg md:text-xl">
-                          {result.playerName}
-                        </p>
-                      </div>
-                      <div className="space-y-1 ml-10 md:ml-13">
-                        <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm">
-                          Predicted:{" "}
-                          {result.isWontComeBet ? (
-                            <span className="font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1">
-                              <Sparkles className="w-3 h-3" />
-                              Won't Come
-                            </span>
-                          ) : (
-                            <span className="font-semibold text-gray-900 dark:text-white">
-                              {formatTime(result.prediction)}
-                            </span>
-                          )}
-                        </p>
-                        {!result.isWontComeBet && !didntCome && (
-                          <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm">
-                            Accuracy:{" "}
-                            <span className={`font-semibold ${
-                              result.difference === 0
-                                ? "text-green-600 dark:text-green-400"
-                                : result.difference <= 2
-                                  ? "text-blue-600 dark:text-blue-400"
-                                  : result.difference <= 5
-                                    ? "text-orange-600 dark:text-orange-400"
-                                    : "text-gray-600 dark:text-gray-400"
-                            }`}>
-                              {result.difference === 0 ? "Perfect!" : `Off by ${Math.abs(result.difference)} min`}
-                            </span>
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-left md:text-right">
-                      {result.error ? (
-                        <p className="text-red-600 dark:text-red-400 text-lg">
-                          {result.error}
-                        </p>
-                      ) : (
-                        <>
-                          <p
-                            className={`text-2xl md:text-3xl font-bold mb-1 ${
-                              result.netChange > 0
-                                ? "text-green-600 dark:text-green-400"
-                                : "text-gray-600 dark:text-gray-400"
-                            }`}
-                          >
-                            +{result.netChange}
-                          </p>
-                          <p className="text-gray-600 dark:text-gray-400 text-xs mb-2">
-                            Points earned
-                          </p>
-                          <div className="inline-flex items-center gap-1 md:gap-2 bg-white dark:bg-gray-700 rounded-lg px-2 md:px-3 py-1 border border-gray-200 dark:border-gray-600">
-                            <span className="text-blue-600 dark:text-blue-400 text-base md:text-lg font-bold">
-                              {result.newPoints}
-                            </span>
-                            <span className="text-gray-600 dark:text-gray-400 text-xs">
-                              total pts
-                            </span>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={resetGame}
-              className="w-full py-4 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-bold rounded-xl text-lg md:text-xl transition-colors flex items-center justify-center gap-2 md:gap-3 shadow-lg min-h-[56px]"
-            >
-              <RefreshCw className="w-6 h-6 md:w-7 md:h-7" />
-              <span>New Game</span>
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

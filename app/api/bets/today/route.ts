@@ -42,8 +42,9 @@ export async function GET(request: Request) {
       },
     });
 
-    // Check if results have been revealed (actualTime is set or didntCome is true)
-    const resultsRevealed = game && (game.actualTime !== null || game.didntCome);
+    // Check if results have been revealed (actualTime is set AND not 0, or didntCome is true)
+    // actualTime: 0 is used as a placeholder for incomplete games
+    const resultsRevealed = game && (game.didntCome || (game.actualTime !== null && game.actualTime !== 0));
 
     // Find all bets for today
     const bets = await prisma.bet.findMany({
@@ -78,6 +79,7 @@ export async function GET(request: Request) {
         })),
         resultsRevealed,
         game: game ? {
+          id: game.id,
           actualTime: game.actualTime,
           didntCome: game.didntCome,
         } : null,
